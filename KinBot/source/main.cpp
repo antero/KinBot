@@ -15,8 +15,8 @@ This projects needs the following libraries:
 
 HANDLE m_pVideoStreamHandle;
 HANDLE m_pDepthStreamHandle;
-NUI_IMAGE_FRAME * pImageFrame;
-NUI_IMAGE_FRAME * pDepthFrame;
+NUI_IMAGE_FRAME pImageFrame;
+NUI_IMAGE_FRAME pDepthFrame;
 NUI_SKELETON_FRAME skeletonFrame;
 INuiFrameTexture * pImageTexture;
 INuiFrameTexture * pDepthTexture;
@@ -29,7 +29,7 @@ cv::Mat image;
 cv::Mat imageDepth;
 
 void grabRGB(){
-	pImageTexture = pImageFrame->pFrameTexture;
+	pImageTexture = pImageFrame.pFrameTexture;
 	pImageTexture->LockRect( 0, &LockedImage, NULL, 0);
 	pRGB = (BYTE*) LockedImage.pBits;
 
@@ -42,7 +42,7 @@ void grabRGB(){
 }
 
 void grabDepth(){
-	pDepthTexture = pDepthFrame->pFrameTexture;
+	pDepthTexture = pDepthFrame.pFrameTexture;
 	pDepthTexture->LockRect( 0, &LockedDepth, NULL, 0);
 	pDepth = (USHORT*) LockedDepth.pBits;
 
@@ -116,7 +116,7 @@ int main() {
 		memset(imageDepth.data,0,sizeof(char)*3*320*240);
 		memset(image.data,0,sizeof(char)*3*640*480);
 
-		hr = sensor->NuiImageStreamGetNextFrame(m_pVideoStreamHandle, 100, pImageFrame);
+		hr = sensor->NuiImageStreamGetNextFrame(m_pVideoStreamHandle, 100, &pImageFrame);
 		if(hr != S_OK) {
 			printf("Erro ao ler frame do stream RGB.\n");
 			continue;
@@ -124,10 +124,10 @@ int main() {
 
 		grabRGB();
 
-		hr = NuiImageStreamGetNextFrame(m_pDepthStreamHandle, 100, &pDepthFrame);
+		hr = sensor->NuiImageStreamGetNextFrame(m_pDepthStreamHandle, 100, &pDepthFrame);
 		if(hr != S_OK) {
 			printf("Erro ao ler frame do stream de profundidade.\n");
-			NuiImageStreamReleaseFrame(m_pVideoStreamHandle, pImageFrame);
+			NuiImageStreamReleaseFrame(m_pVideoStreamHandle, &pImageFrame);
 			continue;
 		}
 
@@ -141,10 +141,11 @@ int main() {
 			break;
 		}
 
-		sensor->NuiImageStreamReleaseFrame(m_pVideoStreamHandle, pImageFrame);
-		sensor->NuiImageStreamReleaseFrame(m_pDepthStreamHandle, pDepthFrame);
+		sensor->NuiImageStreamReleaseFrame(m_pVideoStreamHandle, &pImageFrame);
+		sensor->NuiImageStreamReleaseFrame(m_pDepthStreamHandle, &pDepthFrame);
 	}
 	sensor->NuiShutdown();
+	cv::destroyAllWindows();
 
 	return 0;
 }
