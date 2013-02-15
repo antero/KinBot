@@ -127,7 +127,7 @@ int main() {
 		hr = sensor->NuiImageStreamGetNextFrame(m_pDepthStreamHandle, 100, &pDepthFrame);
 		if(hr != S_OK) {
 			printf("Erro ao ler frame do stream de profundidade.\n");
-			NuiImageStreamReleaseFrame(m_pVideoStreamHandle, &pImageFrame);
+			sensor->NuiImageStreamReleaseFrame(m_pVideoStreamHandle, &pImageFrame);
 			continue;
 		}
 
