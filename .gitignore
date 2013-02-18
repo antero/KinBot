@@ -6,9 +6,6 @@
 *.user
 *.sln.docstates
 
-#dependencies
-KinBot/dependencies/
-
 # Build results
 
 [Dd]ebug/
