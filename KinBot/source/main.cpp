@@ -70,6 +70,28 @@ void grabDepth(){
 	}
 }
 
+void drawlines(){
+	cv::line(imageSkel, cv::Point((int) joints[0][0], (int) joints[0][1]), cv::Point((int) joints[1][0], (int) joints[1][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[0][0], (int) joints[0][1]), cv::Point((int) joints[12][0], (int) joints[12][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[0][0], (int) joints[0][1]), cv::Point((int) joints[16][0], (int) joints[16][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[1][0], (int) joints[1][1]), cv::Point((int) joints[2][0], (int) joints[2][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[2][0], (int) joints[2][1]), cv::Point((int) joints[3][0], (int) joints[3][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[2][0], (int) joints[2][1]), cv::Point((int) joints[4][0], (int) joints[4][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[2][0], (int) joints[2][1]), cv::Point((int) joints[8][0], (int) joints[8][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[4][0], (int) joints[4][1]), cv::Point((int) joints[5][0], (int) joints[5][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[5][0], (int) joints[5][1]), cv::Point((int) joints[6][0], (int) joints[6][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[6][0], (int) joints[6][1]), cv::Point((int) joints[7][0], (int) joints[7][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[8][0], (int) joints[8][1]), cv::Point((int) joints[9][0], (int) joints[9][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[9][0], (int) joints[9][1]), cv::Point((int) joints[10][0], (int) joints[10][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[10][0], (int) joints[10][1]), cv::Point((int) joints[11][0], (int) joints[11][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[12][0], (int) joints[12][1]), cv::Point((int) joints[13][0], (int) joints[13][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[13][0], (int) joints[13][1]), cv::Point((int) joints[14][0], (int) joints[14][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[14][0], (int) joints[14][1]), cv::Point((int) joints[15][0], (int) joints[15][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[16][0], (int) joints[16][1]), cv::Point((int) joints[17][0], (int) joints[17][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[17][0], (int) joints[17][1]), cv::Point((int) joints[18][0], (int) joints[18][1]), cv::Scalar(0,0,255,0));
+	cv::line(imageSkel, cv::Point((int) joints[18][0], (int) joints[18][1]), cv::Point((int) joints[19][0], (int) joints[19][1]), cv::Scalar(0,0,255,0));
+}
+
 void grabSkel(){
 	bool success = false;
 	for(int i = 0; i < NUI_SKELETON_COUNT; i++){
@@ -81,13 +103,17 @@ void grabSkel(){
 		}
 		break;
 	}
-	if (success)
+	if (success){
+		
 		for(int i = 0; i < NUI_SKELETON_POSITION_COUNT; i++){
 			int x = (int) joints[i][0];
 			int y = (int) joints[i][1];
 			cv::circle(imageSkel, cv::Point(x, y), 1, cv::Scalar(0,255,0,0));
 			printf("%d %d\n", x, y);
 		}
+
+		drawlines();
+	}
 }
 
 int main() {
