@@ -83,13 +83,9 @@ void grabSkel(){
 	}
 	if (success)
 		for(int i = 0; i < NUI_SKELETON_POSITION_COUNT; i++){
-			FLOAT xF = joints[i][0];
-			FLOAT yF = joints[i][1];
-			int x = (int) xF;
-			int y = (int) yF;
-			imageSkel.at<cv::Vec3b>(x*2,y*2)[0] = 0;
-			imageSkel.at<cv::Vec3b>(x*2,y*2)[1] = 0;
-			imageSkel.at<cv::Vec3b>(x*2,y*2)[2] = 255;
+			int x = (int) joints[i][0];
+			int y = (int) joints[i][1];
+			cv::circle(imageSkel, cv::Point(x, y), 1, cv::Scalar(0,255,0,0));
 			printf("%d %d\n", x, y);
 		}
 }
@@ -110,7 +106,7 @@ int main() {
 		exit(-1);
 	}
 	//define detecção de esqueleto
-	imageSkel = cv::Mat(480, 640, CV_8UC3);
+	imageSkel = cv::Mat(240, 320, CV_8UC3);
 	hr = sensor->NuiSkeletonTrackingEnable( 0, 0 );
     if(hr != S_OK) {
 		printf("Erro ao iniciar deteccao de esqueleto.\n");
@@ -143,7 +139,7 @@ int main() {
 	{
 		memset(image.data,0,sizeof(char)*3*640*480);
 		memset(imageDepth.data,0,sizeof(char)*3*320*240);
-		memset(imageSkel.data,0,sizeof(char)*3*640*480);
+		memset(imageSkel.data,0,sizeof(char)*3*320*240);
 
 		hr = sensor->NuiImageStreamGetNextFrame(m_pVideoStreamHandle, 100, &pImageFrame);
 		if(hr != S_OK) {
@@ -183,6 +179,7 @@ int main() {
 
 		sensor->NuiImageStreamReleaseFrame(m_pVideoStreamHandle, &pImageFrame);
 		sensor->NuiImageStreamReleaseFrame(m_pDepthStreamHandle, &pDepthFrame);
+		
 	}
 	sensor->NuiShutdown();
 	cv::destroyAllWindows();
