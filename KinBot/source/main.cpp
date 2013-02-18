@@ -24,9 +24,11 @@ NUI_LOCKED_RECT LockedImage;
 NUI_LOCKED_RECT LockedDepth;
 BYTE * pRGB;
 USHORT * pDepth;
+FLOAT joints[NUI_SKELETON_POSITION_COUNT][2];
 
 cv::Mat image;
 cv::Mat imageDepth;
+cv::Mat imageSkel;
 
 void grabRGB(){
 	pImageTexture = pImageFrame.pFrameTexture;
@@ -68,6 +70,30 @@ void grabDepth(){
 	}
 }
 
+void grabSkel(){
+	bool success = false;
+	for(int i = 0; i < NUI_SKELETON_COUNT; i++){
+		if (skeletonFrame.SkeletonData[i].eTrackingState == NUI_SKELETON_NOT_TRACKED) continue;
+		success = true;
+		for(int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++){
+			NuiTransformSkeletonToDepthImage(skeletonFrame.SkeletonData[i].SkeletonPositions[j],
+				&(joints[j][0]), &(joints[j][1]), NUI_IMAGE_RESOLUTION_320x240);
+		}
+		break;
+	}
+	if (success)
+		for(int i = 0; i < NUI_SKELETON_POSITION_COUNT; i++){
+			FLOAT xF = joints[i][0];
+			FLOAT yF = joints[i][1];
+			int x = (int) xF;
+			int y = (int) yF;
+			imageSkel.at<cv::Vec3b>(x*2,y*2)[0] = 0;
+			imageSkel.at<cv::Vec3b>(x*2,y*2)[1] = 0;
+			imageSkel.at<cv::Vec3b>(x*2,y*2)[2] = 255;
+			printf("%d %d\n", x, y);
+		}
+}
+
 int main() {
 	int device=0;
 	INuiSensor* sensor;
@@ -84,6 +110,7 @@ int main() {
 		exit(-1);
 	}
 	//define detecção de esqueleto
+	imageSkel = cv::Mat(480, 640, CV_8UC3);
 	hr = sensor->NuiSkeletonTrackingEnable( 0, 0 );
     if(hr != S_OK) {
 		printf("Erro ao iniciar deteccao de esqueleto.\n");
@@ -110,11 +137,13 @@ int main() {
 	cv::namedWindow("Depth", cv::WINDOW_AUTOSIZE);
 	cv::namedWindow("Requeleto", cv::WINDOW_AUTOSIZE);
 
+	memset(joints, 0, sizeof(FLOAT)*2*NUI_SKELETON_POSITION_COUNT);
 	//exibe streams
 	while (true) 
 	{
-		memset(imageDepth.data,0,sizeof(char)*3*320*240);
 		memset(image.data,0,sizeof(char)*3*640*480);
+		memset(imageDepth.data,0,sizeof(char)*3*320*240);
+		memset(imageSkel.data,0,sizeof(char)*3*640*480);
 
 		hr = sensor->NuiImageStreamGetNextFrame(m_pVideoStreamHandle, 100, &pImageFrame);
 		if(hr != S_OK) {
@@ -133,8 +162,19 @@ int main() {
 
 		grabDepth();
 
+		hr = sensor->NuiSkeletonGetNextFrame(100, &skeletonFrame);
+		if(hr != S_OK) {
+			printf("Erro ao ler frame do stream do esqueleto.\n");
+			sensor->NuiImageStreamReleaseFrame(m_pVideoStreamHandle, &pImageFrame);
+			sensor->NuiImageStreamReleaseFrame(m_pDepthStreamHandle, &pDepthFrame);
+			continue;
+		}
+
+		grabSkel();
+
 		imshow("RGB", image);
 		imshow("Depth", imageDepth);
+		imshow("Requeleto", imageSkel);
 		
 		char c = cvWaitKey(10);
 		if((char) c == 27 ) {
