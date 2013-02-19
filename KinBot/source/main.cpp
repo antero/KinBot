@@ -12,6 +12,9 @@ This projects needs the following libraries:
 #include <NuiApi.h>
 
 #include <opencv2\opencv.hpp>
+#include <math.h>
+
+#define PI 3.14159265
 
 HANDLE m_pVideoStreamHandle;
 HANDLE m_pDepthStreamHandle;
@@ -26,6 +29,7 @@ BYTE * pRGB;
 USHORT * pDepth;
 FLOAT joints[NUI_SKELETON_POSITION_COUNT][2];
 NUI_SKELETON_BONE_ORIENTATION orientations[NUI_SKELETON_POSITION_COUNT];
+int skelIndex = -1;
 
 cv::Mat image;
 cv::Mat imageDepth;
@@ -93,11 +97,26 @@ void drawSkelLines(){
 	cv::line(imageSkel, cv::Point((int) joints[18][0], (int) joints[18][1]), cv::Point((int) joints[19][0], (int) joints[19][1]), cv::Scalar(0,0,255,0));
 }
 
+void vecsub(Vector4 vec1, Vector4 vec2, Vector4 &res){
+	res.x = vec1.x - vec2.x;
+	res.y = vec1.y - vec2.y;
+	res.z = vec1.z - vec2.z;
+}
+
+float dotproduct(Vector4 vec1, Vector4 vec2){
+	return (vec1.x*vec2.x + vec1.y*vec2.y + vec1.z*vec2.z);
+}
+
+float module(Vector4 vec){
+	return sqrt( dotproduct(vec, vec) );
+}
+
 void grabSkel(){
 	bool success = false;
 	for(int i = 0; i < NUI_SKELETON_COUNT; i++){
 		if (skeletonFrame.SkeletonData[i].eTrackingState == NUI_SKELETON_NOT_TRACKED) continue;
 		success = true;
+		skelIndex = i;
 		for(int j = 0; j < NUI_SKELETON_POSITION_COUNT; j++){
 			NuiTransformSkeletonToDepthImage(skeletonFrame.SkeletonData[i].SkeletonPositions[j],
 				&(joints[j][0]), &(joints[j][1]), NUI_IMAGE_RESOLUTION_320x240);
@@ -114,6 +133,17 @@ void grabSkel(){
 
 		drawSkelLines();
 	}
+}
+
+int ThreeJointAngle(Vector4 j1, Vector4 j2, Vector4 j3){
+	Vector4 braco, antebraco;
+	vecsub(j1, j2, braco);
+	vecsub(j3, j2, antebraco);
+	float cosTeta = dotproduct(braco, antebraco) / (module(braco) * module(antebraco)) ;
+	float degree = acos(cosTeta) * 180.0 / PI;
+	if (degree < 0 ) return 0;
+	else if (degree > 180) return 180;
+	else return ((int) degree);
 }
 
 int main() {
@@ -198,17 +228,30 @@ int main() {
 		imshow("Requeleto", imageSkel);
 		
 		//pega orientacoes
-		NuiSkeletonCalculateBoneOrientations(skeletonFrame.SkeletonData, orientations);
-		for (int i = 0; i <NUI_SKELETON_POSITION_COUNT; i++){
-			NUI_SKELETON_BONE_ROTATION rotation = orientations[i].hierarchicalRotation;
-			Matrix4 matrixRot = rotation.rotationMatrix;
-			printf("joint %d - joint %d = \n", orientations[i].startJoint, orientations[i].endJoint);
-			printf("%f %f %f %f\n", matrixRot.M11, matrixRot.M12, matrixRot.M13, matrixRot.M14);
-			printf("%f %f %f %f\n", matrixRot.M21, matrixRot.M22, matrixRot.M23, matrixRot.M24);
-			printf("%f %f %f %f\n", matrixRot.M31, matrixRot.M32, matrixRot.M33, matrixRot.M34);
-			printf("%f %f %f %f\n", matrixRot.M41, matrixRot.M42, matrixRot.M43, matrixRot.M44);
-			printf("\n");
+		if (skelIndex >= 0){
+			Vector4 j4 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[4];
+			Vector4 j8 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[8];
+			Vector4 j9 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[9];
+			Vector4 j10 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[10];
+			Vector4 j11 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[11];
+			int anguloOmbro = ThreeJointAngle(j4,j8,j9);
+			int anguloCotovelo = ThreeJointAngle(j8,j9,j10);
+			int anguloPulso = ThreeJointAngle(j9,j10,j11);
+			printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
+			printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
+			printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
 		}
+		//NuiSkeletonCalculateBoneOrientations(skeletonFrame.SkeletonData, orientations);
+		//for (int i = 0; i <NUI_SKELETON_POSITION_COUNT; i++){
+		//	NUI_SKELETON_BONE_ROTATION rotation = orientations[i].hierarchicalRotation;
+		//	Matrix4 matrixRot = rotation.rotationMatrix;
+		//	printf("joint %d - joint %d = \n", orientations[i].startJoint, orientations[i].endJoint);
+		//	printf("%f %f %f %f\n", matrixRot.M11, matrixRot.M12, matrixRot.M13, matrixRot.M14);
+		//	printf("%f %f %f %f\n", matrixRot.M21, matrixRot.M22, matrixRot.M23, matrixRot.M24);
+		//	printf("%f %f %f %f\n", matrixRot.M31, matrixRot.M32, matrixRot.M33, matrixRot.M34);
+		//	printf("%f %f %f %f\n", matrixRot.M41, matrixRot.M42, matrixRot.M43, matrixRot.M44);
+		//	printf("\n");
+		//}
 		count+=1;
 		if (count >= 150) break;
 		char c = cvWaitKey(10);
