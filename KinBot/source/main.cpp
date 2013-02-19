@@ -212,19 +212,7 @@ int main() {
 			printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
 			printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
 		}
-		//NuiSkeletonCalculateBoneOrientations(skeletonFrame.SkeletonData, orientations);
-		//for (int i = 0; i <NUI_SKELETON_POSITION_COUNT; i++){
-		//	NUI_SKELETON_BONE_ROTATION rotation = orientations[i].hierarchicalRotation;
-		//	Matrix4 matrixRot = rotation.rotationMatrix;
-		//	printf("joint %d - joint %d = \n", orientations[i].startJoint, orientations[i].endJoint);
-		//	printf("%f %f %f %f\n", matrixRot.M11, matrixRot.M12, matrixRot.M13, matrixRot.M14);
-		//	printf("%f %f %f %f\n", matrixRot.M21, matrixRot.M22, matrixRot.M23, matrixRot.M24);
-		//	printf("%f %f %f %f\n", matrixRot.M31, matrixRot.M32, matrixRot.M33, matrixRot.M34);
-		//	printf("%f %f %f %f\n", matrixRot.M41, matrixRot.M42, matrixRot.M43, matrixRot.M44);
-		//	printf("\n");
-		//}
-		count+=1;
-		if (count >= 150) break;
+
 		char c = cvWaitKey(10);
 		if((char) c == 27 ) {
 			break;
