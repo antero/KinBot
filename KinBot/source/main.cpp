@@ -25,6 +25,7 @@ NUI_LOCKED_RECT LockedDepth;
 BYTE * pRGB;
 USHORT * pDepth;
 FLOAT joints[NUI_SKELETON_POSITION_COUNT][2];
+NUI_SKELETON_BONE_ORIENTATION orientations[NUI_SKELETON_POSITION_COUNT];
 
 cv::Mat image;
 cv::Mat imageDepth;
@@ -70,7 +71,7 @@ void grabDepth(){
 	}
 }
 
-void drawlines(){
+void drawSkelLines(){
 	cv::line(imageSkel, cv::Point((int) joints[0][0], (int) joints[0][1]), cv::Point((int) joints[1][0], (int) joints[1][1]), cv::Scalar(0,0,255,0));
 	cv::line(imageSkel, cv::Point((int) joints[0][0], (int) joints[0][1]), cv::Point((int) joints[12][0], (int) joints[12][1]), cv::Scalar(0,0,255,0));
 	cv::line(imageSkel, cv::Point((int) joints[0][0], (int) joints[0][1]), cv::Point((int) joints[16][0], (int) joints[16][1]), cv::Scalar(0,0,255,0));
@@ -109,10 +110,9 @@ void grabSkel(){
 			int x = (int) joints[i][0];
 			int y = (int) joints[i][1];
 			cv::circle(imageSkel, cv::Point(x, y), 1, cv::Scalar(0,255,0,0));
-			printf("%d %d\n", x, y);
 		}
 
-		drawlines();
+		drawSkelLines();
 	}
 }
 
@@ -161,29 +161,29 @@ int main() {
 
 	memset(joints, 0, sizeof(FLOAT)*2*NUI_SKELETON_POSITION_COUNT);
 	//exibe streams
+	int count = 0;
 	while (true) 
 	{
+		//zera imagens
 		memset(image.data,0,sizeof(char)*3*640*480);
 		memset(imageDepth.data,0,sizeof(char)*3*320*240);
 		memset(imageSkel.data,0,sizeof(char)*3*320*240);
-
+		//imagem de cor
 		hr = sensor->NuiImageStreamGetNextFrame(m_pVideoStreamHandle, 100, &pImageFrame);
 		if(hr != S_OK) {
 			printf("Erro ao ler frame do stream RGB.\n");
 			continue;
 		}
-
 		grabRGB();
-
+		//imagem de profundidade
 		hr = sensor->NuiImageStreamGetNextFrame(m_pDepthStreamHandle, 100, &pDepthFrame);
 		if(hr != S_OK) {
 			printf("Erro ao ler frame do stream de profundidade.\n");
 			sensor->NuiImageStreamReleaseFrame(m_pVideoStreamHandle, &pImageFrame);
 			continue;
 		}
-
 		grabDepth();
-
+		//imagem do esqueleto
 		hr = sensor->NuiSkeletonGetNextFrame(100, &skeletonFrame);
 		if(hr != S_OK) {
 			printf("Erro ao ler frame do stream do esqueleto.\n");
@@ -191,13 +191,26 @@ int main() {
 			sensor->NuiImageStreamReleaseFrame(m_pDepthStreamHandle, &pDepthFrame);
 			continue;
 		}
-
 		grabSkel();
-
+		//joga imagens na tela
 		imshow("RGB", image);
 		imshow("Depth", imageDepth);
 		imshow("Requeleto", imageSkel);
 		
+		//pega orientacoes
+		NuiSkeletonCalculateBoneOrientations(skeletonFrame.SkeletonData, orientations);
+		for (int i = 0; i <NUI_SKELETON_POSITION_COUNT; i++){
+			NUI_SKELETON_BONE_ROTATION rotation = orientations[i].hierarchicalRotation;
+			Matrix4 matrixRot = rotation.rotationMatrix;
+			printf("joint %d - joint %d = \n", orientations[i].startJoint, orientations[i].endJoint);
+			printf("%f %f %f %f\n", matrixRot.M11, matrixRot.M12, matrixRot.M13, matrixRot.M14);
+			printf("%f %f %f %f\n", matrixRot.M21, matrixRot.M22, matrixRot.M23, matrixRot.M24);
+			printf("%f %f %f %f\n", matrixRot.M31, matrixRot.M32, matrixRot.M33, matrixRot.M34);
+			printf("%f %f %f %f\n", matrixRot.M41, matrixRot.M42, matrixRot.M43, matrixRot.M44);
+			printf("\n");
+		}
+		count+=1;
+		if (count >= 150) break;
 		char c = cvWaitKey(10);
 		if((char) c == 27 ) {
 			break;
@@ -207,6 +220,7 @@ int main() {
 		sensor->NuiImageStreamReleaseFrame(m_pDepthStreamHandle, &pDepthFrame);
 		
 	}
+	cvWaitKey();
 	sensor->NuiShutdown();
 	cv::destroyAllWindows();
 
