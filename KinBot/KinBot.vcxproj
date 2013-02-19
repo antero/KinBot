@@ -13,6 +13,9 @@
   <ItemGroup>
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\skelAngles.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CFF3A943-7A38-45EA-A910-B1EF97727A9F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
