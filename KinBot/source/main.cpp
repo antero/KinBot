@@ -10,8 +10,6 @@ This projects needs the following libraries:
 
 #include "skelAngles.h"
 
-#include <opencv2\opencv.hpp>
-
 HANDLE m_pVideoStreamHandle;
 HANDLE m_pDepthStreamHandle;
 NUI_IMAGE_FRAME pImageFrame;
@@ -205,12 +203,19 @@ int main() {
 			Vector4 j9 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[9];
 			Vector4 j10 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[10];
 			Vector4 j11 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[11];
-			int anguloOmbro = threeJointAngle(j4,j8,j9);
-			int anguloCotovelo = threeJointAngle(j8,j9,j10);
-			int anguloPulso = threeJointAngle(j9,j10,j11);
-			printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
-			printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
-			printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
+			int anguloOmbro, anguloCotovelo, anguloPulso;
+			//angulo do ombro
+			hr = threeJointAngle(j4,j8,j9,anguloOmbro);
+			if (hr == S_OK) printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
+			else printf("Não pode pegar o angulo do ombro\n");
+			//angulo do cotovelo
+			hr = threeJointAngle(j8,j9,j10,anguloCotovelo);
+			if (hr == S_OK) printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
+			else printf("Não pode pegar o angulo do cotovelo\n");
+			//angulo do pulso
+			hr = threeJointAngle(j9,j10,j11,anguloPulso);
+			if (hr == S_OK) printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
+			else printf("Não pode pegar o angulo do pulso\n\n");			
 		}
 
 		char c = cvWaitKey(10);

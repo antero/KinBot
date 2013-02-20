@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <NuiApi.h>
 #include <math.h>
+#include <opencv2\opencv.hpp>
 
 void vecsub(Vector4 vec1, Vector4 vec2, Vector4 &res){
 	res.x = vec1.x - vec2.x;
@@ -23,16 +24,21 @@ float module(Vector4 vec){
 }
 
 //retorn angulo entre 3 juntas
-int threeJointAngle(Vector4 j1, Vector4 j2, Vector4 j3){
+HRESULT threeJointAngle(Vector4 j1, Vector4 j2, Vector4 j3, int &result){
 	Vector4 braco, antebraco;
 	vecsub(j1, j2, braco);
 	vecsub(j3, j2, antebraco);
 	float cosTeta = dotproduct(braco, antebraco) / (module(braco) * module(antebraco)) ;
 	float degree = acos(cosTeta) * 180.0 / PI;
-	if (degree < 0 ) return 0;
-	else if (degree > 180) return 180;
-	else return ((int) degree);
+	if (degree < 0 || degree > 180) return S_FALSE;
+	else {result = ((int) degree); return S_OK;}
 }
 
+HRESULT getJointDepth(cv::Mat depthImage, Vector4 joint){
+	FLOAT xF, yF;
+	NuiTransformSkeletonToDepthImage(joint, &xF, &yF, NUI_IMAGE_RESOLUTION_320x240);
+
+	return S_FALSE;
+}
 
 #endif
