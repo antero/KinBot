@@ -12,25 +12,6 @@ HRESULT connectArduino();
 
 void send2Ard(int motorIndex, int angle);
 
-//void main() {
-//
-//	connectArduino();
-//
-//	char data[20];
-//
-//	scanf("%s", data);
-//	while (data[0] != '0'){
-//		char motorIndexStr[] = {data[0]};
-//		int motorIndex = atoi(motorIndexStr);
-//		char angleStr[] = {data[1], data[2], data[3]};
-//		int angle = atoi(angleStr);
-//		send2Ard(motorIndex, angle);
-//		scanf("%s", data);
-//	}
-//
-//	ardPort.Close();
-//}
-
 HRESULT connectArduino(){
 	ardPort.Open(portname, baudRate, 8, NOPARITY, ONESTOPBIT, GENERIC_READ | GENERIC_WRITE);
 

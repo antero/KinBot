@@ -137,7 +137,11 @@ void* streamArduino(void* arg) {
 	static int lastmotor = -1;
 	static int lastangle = -1;
 
-	connectArduino();
+	HRESULT hr = connectArduino();
+	if (hr != S_OK){
+		printf("Erro ao abrir comunicacao com arduino\n");
+		exit(0);
+	}
 
 	while(true) {
 		
@@ -274,8 +278,6 @@ int main() {
 					//valid = true;
 				}
 				//pthread_mutex_unlock(&mutex);
-
-				//send2Ard(MOTOR_COTOVELO, anguloCotovelo);
 			}
 			else printf("Não pode pegar o angulo do cotovelo\n");
 			//angulo do pulso
@@ -295,7 +297,7 @@ int main() {
 	}
 	cvWaitKey();
 	sensor->NuiShutdown();
-	//shutdownArduino();
+	shutdownArduino();
 	cv::destroyAllWindows();
 
 	return 0;
