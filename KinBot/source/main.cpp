@@ -9,6 +9,14 @@ This projects needs the following libraries:
 */
 
 #include "skelAngles.h"
+#include "arduino_comm.h"
+#include <opencv2\opencv.hpp>
+
+#define MOTOR_BASE		1
+#define MOTOR_OMBRO		2
+#define MOTOR_COTOVELO  3
+#define MOTOR_PULSO		4
+#define MOTOR_GARRA		5
 
 HANDLE m_pVideoStreamHandle;
 HANDLE m_pDepthStreamHandle;
@@ -161,6 +169,8 @@ int main() {
 	memset(joints, 0, sizeof(FLOAT)*2*NUI_SKELETON_POSITION_COUNT);
 	//exibe streams
 	int count = 0;
+
+	//connectArduino();
 	while (true) 
 	{
 		//zera imagens
@@ -210,7 +220,10 @@ int main() {
 			else printf("Não pode pegar o angulo do ombro\n");
 			//angulo do cotovelo
 			hr = threeJointAngle(j8,j9,j10,anguloCotovelo);
-			if (hr == S_OK) printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
+			if (hr == S_OK){
+				printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
+		//		send2Ard(MOTOR_COTOVELO, anguloCotovelo);
+			}
 			else printf("Não pode pegar o angulo do cotovelo\n");
 			//angulo do pulso
 			hr = threeJointAngle(j9,j10,j11,anguloPulso);
@@ -229,6 +242,7 @@ int main() {
 	}
 	cvWaitKey();
 	sensor->NuiShutdown();
+	//shutdownArduino();
 	cv::destroyAllWindows();
 
 	return 0;

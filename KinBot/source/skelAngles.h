@@ -7,7 +7,6 @@
 #include <Windows.h>
 #include <NuiApi.h>
 #include <math.h>
-#include <opencv2\opencv.hpp>
 
 void vecsub(Vector4 vec1, Vector4 vec2, Vector4 &res){
 	res.x = vec1.x - vec2.x;
@@ -34,11 +33,11 @@ HRESULT threeJointAngle(Vector4 j1, Vector4 j2, Vector4 j3, int &result){
 	else {result = ((int) degree); return S_OK;}
 }
 
-HRESULT getJointDepth(cv::Mat depthImage, Vector4 joint){
+USHORT getJointDepth(USHORT *pDepth, Vector4 joint){
 	FLOAT xF, yF;
 	NuiTransformSkeletonToDepthImage(joint, &xF, &yF, NUI_IMAGE_RESOLUTION_320x240);
-
-	return S_FALSE;
+	int pos = (int) (yF*240.0 + xF);
+	return pDepth[pos];
 }
 
 #endif
