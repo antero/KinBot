@@ -12,6 +12,8 @@ This projects needs the following libraries:
 #include "arduino_comm.h"
 #include <opencv2\opencv.hpp>
 
+#include <pthread.h>
+
 #define MOTOR_BASE		1
 #define MOTOR_OMBRO		2
 #define MOTOR_COTOVELO  3
@@ -32,6 +34,9 @@ USHORT * pDepth;
 FLOAT joints[NUI_SKELETON_POSITION_COUNT][2];
 NUI_SKELETON_BONE_ORIENTATION orientations[NUI_SKELETON_POSITION_COUNT];
 int skelIndex = -1;
+
+pthread_t thread_c;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 cv::Mat image;
 cv::Mat imageDepth;
@@ -123,6 +128,40 @@ void grabSkel(){
 	}
 }
 
+int motor;
+int angle;
+
+bool valid = false;
+
+void* streamArduino(void* arg) {
+	static int lastmotor = -1;
+	static int lastangle = -1;
+
+	connectArduino();
+
+	while(true) {
+		
+		//pthread_mutex_lock(&mutex);
+
+		if(abs(lastangle-angle)>5) {
+			
+			printf("sending command to arduino... %d: %d\n", motor, angle);
+			
+			if(angle < 180) send2Ard(motor, angle);
+			
+			lastmotor = motor;
+			lastangle = angle;
+			
+			//valid = false;
+		}
+		//pthread_mutex_unlock(&mutex);
+		
+		Sleep(10);
+	}
+
+
+}
+
 int main() {
 	int device=0;
 	INuiSensor* sensor;
@@ -170,6 +209,11 @@ int main() {
 	//exibe streams
 	int count = 0;
 
+	if (pthread_create(&thread_c, NULL, streamArduino, NULL)) {
+	    printf("Failed to create arduino communication thread.\n");
+		exit(0);
+	}
+
 	//connectArduino();
 	while (true) 
 	{
@@ -216,18 +260,27 @@ int main() {
 			int anguloOmbro, anguloCotovelo, anguloPulso;
 			//angulo do ombro
 			hr = threeJointAngle(j4,j8,j9,anguloOmbro);
-			if (hr == S_OK) printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
+			if (hr == S_OK) ;//printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
 			else printf("Não pode pegar o angulo do ombro\n");
 			//angulo do cotovelo
 			hr = threeJointAngle(j8,j9,j10,anguloCotovelo);
 			if (hr == S_OK){
 				printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
-		//		send2Ard(MOTOR_COTOVELO, anguloCotovelo);
+				
+				//pthread_mutex_lock(&mutex);
+				if(anguloCotovelo > 0) {
+					motor = MOTOR_COTOVELO;
+					angle = anguloCotovelo;
+					//valid = true;
+				}
+				//pthread_mutex_unlock(&mutex);
+
+				//send2Ard(MOTOR_COTOVELO, anguloCotovelo);
 			}
 			else printf("Não pode pegar o angulo do cotovelo\n");
 			//angulo do pulso
 			hr = threeJointAngle(j9,j10,j11,anguloPulso);
-			if (hr == S_OK) printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
+			if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
 			else printf("Não pode pegar o angulo do pulso\n\n");			
 		}
 
