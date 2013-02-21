@@ -15,12 +15,6 @@ This projects needs the following libraries:
 #include <pthread.h>
 #include <vector>
 
-#define MOTOR_BASE		1
-#define MOTOR_OMBRO		2
-#define MOTOR_COTOVELO  3
-#define MOTOR_PULSO		4
-#define MOTOR_GARRA		5
-
 HANDLE m_pVideoStreamHandle;
 HANDLE m_pDepthStreamHandle;
 NUI_IMAGE_FRAME pImageFrame;
@@ -285,18 +279,18 @@ int main() {
 			Vector4 j11 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[11];
 			int anguloOmbro, anguloCotovelo, anguloPulso;
 			//angulo do ombro
-			hr = threeJointAngle(j4,j8,j9,anguloOmbro);
+			hr = threeJointAngle(j4,j8,j9,MOTOR_OMBRO,anguloOmbro);
 			if (hr == S_OK){
-				printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
+				if (!(count%50)) printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
 				if(anguloOmbro > 0) {
 					angle[MOTOR_OMBRO] = anguloOmbro;
 				}
 			}
 			else printf("Não pode pegar o angulo do ombro\n");
 			//angulo do cotovelo
-			hr = threeJointAngle(j8,j9,j10,anguloCotovelo);
+			hr = threeJointAngle(j8,j9,j10,MOTOR_COTOVELO,anguloCotovelo);
 			if (hr == S_OK){
-				printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
+				if (!(count%50)) printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
 				
 				if(anguloCotovelo > 0) {
 					angle[MOTOR_COTOVELO] = anguloCotovelo;
@@ -304,11 +298,11 @@ int main() {
 			}
 			else printf("Não pode pegar o angulo do cotovelo\n");
 			//angulo do pulso
-			//hr = threeJointAngle(j9,j10,j11,anguloPulso);
+			//hr = threeJointAngle(j9,j10,j11,MOTOR_PULSO,anguloPulso);
 			//if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
 			//else printf("Não pode pegar o angulo do pulso\n\n");			
 		}
-
+		count++;
 		char c = cvWaitKey(10);
 		if((char) c == 27 ) {
 			break;
