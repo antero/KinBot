@@ -24,10 +24,10 @@ float module(Vector4 vec){
 
 //retorn angulo entre 3 juntas
 HRESULT threeJointAngle(Vector4 j1, Vector4 j2, Vector4 j3, int &result){
-	Vector4 braco, antebraco;
-	vecsub(j1, j2, braco);
-	vecsub(j3, j2, antebraco);
-	float cosTeta = dotproduct(braco, antebraco) / (module(braco) * module(antebraco)) ;
+	Vector4 v1, v2;
+	vecsub(j1, j2, v1);
+	vecsub(j3, j2, v2);
+	float cosTeta = dotproduct(v1, v2) / (module(v1) * module(v2)) ;
 	float degree = acos(cosTeta) * 180.0 / PI;
 	if (degree < 0 || degree > 180) return S_FALSE;
 	else {result = ((int) degree); return S_OK;}

@@ -130,8 +130,7 @@ void grabSkel(){
 	}
 }
 
-int motor;
-int angle;
+int angle[6] = {-1,-1,-1,-1,-1,-1};
 
 bool valid = false;
 
@@ -146,39 +145,30 @@ void* streamArduino(void* arg) {
 
 	while(true) {
 		
-		pthread_mutex_lock(&mutex);
-		if ( commands[0].empty() ) motor = -1;
-		else {
-			motor = commands[0].at(0);
-			angle = commands[1].at(0);
-			commands[0].erase(commands[0].begin());
-			commands[1].erase(commands[1].begin());
+		if (abs(lastangle[MOTOR_BASE]-angle[MOTOR_BASE])>5){
+				printf("sending command to arduino... %d: %d\n", MOTOR_BASE, angle[MOTOR_BASE]);
+				if(angle[MOTOR_BASE] < 180) send2Ard(MOTOR_BASE, angle[MOTOR_BASE]);
+				lastangle[MOTOR_BASE] = angle[MOTOR_BASE];
 		}
-		pthread_mutex_unlock(&mutex);
-
-		switch (motor){
-		case MOTOR_BASE:
-			break;
-		case MOTOR_OMBRO:
-			if (abs(lastangle[MOTOR_OMBRO]-angle)>5){
-				printf("sending command to arduino... %d: %d\n", motor, angle);
-				if(angle < 180) send2Ard(motor, angle);
-				lastangle[MOTOR_OMBRO] = angle;
-			}
-			break;
-		case MOTOR_COTOVELO:
-			if (abs(lastangle[MOTOR_COTOVELO]-angle)>5){
-				printf("sending command to arduino... %d: %d\n", motor, angle);
-				if(angle < 180) send2Ard(motor, angle);
-				lastangle[MOTOR_COTOVELO] = angle;
-			}
-			break;
-		case MOTOR_PULSO:
-			break;
-		case MOTOR_GARRA:
-			break;
-		default:
-			break;
+		if (abs(lastangle[MOTOR_OMBRO]-angle[MOTOR_OMBRO])>5){
+				printf("sending command to arduino... %d: %d\n", MOTOR_OMBRO, angle[MOTOR_OMBRO]);
+				if(angle[MOTOR_OMBRO] < 180) send2Ard(MOTOR_OMBRO, angle[MOTOR_OMBRO]);
+				lastangle[MOTOR_OMBRO] = angle[MOTOR_OMBRO];
+		}
+		if (abs(lastangle[MOTOR_COTOVELO]-angle[MOTOR_COTOVELO])>5){
+				printf("sending command to arduino... %d: %d\n", MOTOR_COTOVELO, angle[MOTOR_COTOVELO]);
+				if(angle[MOTOR_COTOVELO] < 180) send2Ard(MOTOR_COTOVELO, angle[MOTOR_COTOVELO]);
+				lastangle[MOTOR_COTOVELO] = angle[MOTOR_COTOVELO];
+		}
+		if (abs(lastangle[MOTOR_PULSO]-angle[MOTOR_PULSO])>5){
+				printf("sending command to arduino... %d: %d\n", MOTOR_PULSO, angle[MOTOR_PULSO]);
+				if(angle[MOTOR_PULSO] < 180) send2Ard(MOTOR_PULSO, angle[MOTOR_PULSO]);
+				lastangle[MOTOR_PULSO] = angle[MOTOR_PULSO];
+		}
+		if (abs(lastangle[MOTOR_GARRA]-angle[MOTOR_GARRA])>5){
+				printf("sending command to arduino... %d: %d\n", MOTOR_GARRA, angle[MOTOR_GARRA]);
+				if(angle[MOTOR_GARRA] < 180) send2Ard(MOTOR_GARRA, angle[MOTOR_GARRA]);
+				lastangle[MOTOR_GARRA] = angle[MOTOR_GARRA];
 		}
 
 
@@ -246,12 +236,11 @@ int main() {
 	//exibe streams
 	int count = 0;
 
-	if (pthread_create(&thread_c, NULL, streamArduino, NULL)) {
-	    printf("Failed to create arduino communication thread.\n");
-		exit(0);
-	}
+	//if (pthread_create(&thread_c, NULL, streamArduino, NULL)) {
+	//    printf("Failed to create arduino communication thread.\n");
+	//	exit(0);
+	//}
 
-	//connectArduino();
 	while (true) 
 	{
 		//zera imagens
@@ -300,10 +289,7 @@ int main() {
 			if (hr == S_OK){
 				printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
 				if(anguloOmbro > 0) {
-					pthread_mutex_lock(&mutex);
-					commands[0].push_back(MOTOR_OMBRO);
-					commands[1].push_back(anguloOmbro);
-					pthread_mutex_unlock(&mutex);
+					angle[MOTOR_OMBRO] = anguloOmbro;
 				}
 			}
 			else printf("Não pode pegar o angulo do ombro\n");
@@ -312,20 +298,15 @@ int main() {
 			if (hr == S_OK){
 				printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
 				
-				//pthread_mutex_lock(&mutex);
 				if(anguloCotovelo > 0) {
-					pthread_mutex_lock(&mutex);
-					commands[0].push_back(MOTOR_COTOVELO);
-					commands[1].push_back(anguloCotovelo);
-					pthread_mutex_unlock(&mutex);
+					angle[MOTOR_COTOVELO] = anguloCotovelo;
 				}
-				//pthread_mutex_unlock(&mutex);
 			}
 			else printf("Não pode pegar o angulo do cotovelo\n");
 			//angulo do pulso
-			hr = threeJointAngle(j9,j10,j11,anguloPulso);
-			if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
-			else printf("Não pode pegar o angulo do pulso\n\n");			
+			//hr = threeJointAngle(j9,j10,j11,anguloPulso);
+			//if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
+			//else printf("Não pode pegar o angulo do pulso\n\n");			
 		}
 
 		char c = cvWaitKey(10);
