@@ -13,6 +13,7 @@ This projects needs the following libraries:
 #include <opencv2\opencv.hpp>
 
 #include <pthread.h>
+#include <vector>
 
 #define MOTOR_BASE		1
 #define MOTOR_OMBRO		2
@@ -37,6 +38,7 @@ int skelIndex = -1;
 
 pthread_t thread_c;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+std::vector<int> commands[2];
 
 cv::Mat image;
 cv::Mat imageDepth;
@@ -134,8 +136,7 @@ int angle;
 bool valid = false;
 
 void* streamArduino(void* arg) {
-	static int lastmotor = -1;
-	static int lastangle = -1;
+	static int lastangle[6] = {-1,-1,-1,-1,-1,-1};
 
 	HRESULT hr = connectArduino();
 	if (hr != S_OK){
@@ -145,20 +146,52 @@ void* streamArduino(void* arg) {
 
 	while(true) {
 		
-		//pthread_mutex_lock(&mutex);
-
-		if(abs(lastangle-angle)>5) {
-			
-			printf("sending command to arduino... %d: %d\n", motor, angle);
-			
-			if(angle < 180) send2Ard(motor, angle);
-			
-			lastmotor = motor;
-			lastangle = angle;
-			
-			//valid = false;
+		pthread_mutex_lock(&mutex);
+		if ( commands[0].empty() ) motor = -1;
+		else {
+			motor = commands[0].at(0);
+			angle = commands[1].at(0);
+			commands[0].erase(commands[0].begin());
+			commands[1].erase(commands[1].begin());
 		}
-		//pthread_mutex_unlock(&mutex);
+		pthread_mutex_unlock(&mutex);
+
+		switch (motor){
+		case MOTOR_BASE:
+			break;
+		case MOTOR_OMBRO:
+			if (abs(lastangle[MOTOR_OMBRO]-angle)>5){
+				printf("sending command to arduino... %d: %d\n", motor, angle);
+				if(angle < 180) send2Ard(motor, angle);
+				lastangle[MOTOR_OMBRO] = angle;
+			}
+			break;
+		case MOTOR_COTOVELO:
+			if (abs(lastangle[MOTOR_COTOVELO]-angle)>5){
+				printf("sending command to arduino... %d: %d\n", motor, angle);
+				if(angle < 180) send2Ard(motor, angle);
+				lastangle[MOTOR_COTOVELO] = angle;
+			}
+			break;
+		case MOTOR_PULSO:
+			break;
+		case MOTOR_GARRA:
+			break;
+		default:
+			break;
+		}
+
+
+		//if(abs(lastangle-angle)>5) {
+		//	
+		//	printf("sending command to arduino... %d: %d\n", motor, angle);
+		//	
+		//	if(angle < 180) send2Ard(motor, angle);
+		//	
+		//	lastangle = angle;
+		//	
+		//	//valid = false;
+		//}
 		
 		Sleep(10);
 	}
@@ -264,7 +297,15 @@ int main() {
 			int anguloOmbro, anguloCotovelo, anguloPulso;
 			//angulo do ombro
 			hr = threeJointAngle(j4,j8,j9,anguloOmbro);
-			if (hr == S_OK) ;//printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
+			if (hr == S_OK){
+				printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
+				if(anguloOmbro > 0) {
+					pthread_mutex_lock(&mutex);
+					commands[0].push_back(MOTOR_OMBRO);
+					commands[1].push_back(anguloOmbro);
+					pthread_mutex_unlock(&mutex);
+				}
+			}
 			else printf("Não pode pegar o angulo do ombro\n");
 			//angulo do cotovelo
 			hr = threeJointAngle(j8,j9,j10,anguloCotovelo);
@@ -273,9 +314,10 @@ int main() {
 				
 				//pthread_mutex_lock(&mutex);
 				if(anguloCotovelo > 0) {
-					motor = MOTOR_COTOVELO;
-					angle = anguloCotovelo;
-					//valid = true;
+					pthread_mutex_lock(&mutex);
+					commands[0].push_back(MOTOR_COTOVELO);
+					commands[1].push_back(anguloCotovelo);
+					pthread_mutex_unlock(&mutex);
 				}
 				//pthread_mutex_unlock(&mutex);
 			}
