@@ -271,9 +271,9 @@ int main() {
 		//pega orientacoes
 		if (skelIndex >= 0){
 			Vector4 j4 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[4];//ombro esquerdo
-			Vector4 j8 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[8];//ombro direito
-			Vector4 j9 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[9];//cotovelo direito
-			Vector4 j10 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[10];//pulso direito
+			Vector4 j8 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_RIGHT];//ombro direito
+			Vector4 j9 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_RIGHT];//cotovelo direito
+			Vector4 j10 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_WRIST_RIGHT];//pulso direito
 			Vector4 j11 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_HAND_RIGHT];//mão direita
 			int anguloOmbro, anguloCotovelo, anguloPulso;
 			getJointDepth(pDepth, j11, xC, yC, positions);
