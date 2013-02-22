@@ -234,13 +234,15 @@ int main() {
 	//    printf("Failed to create arduino communication thread.\n");
 	//	exit(0);
 	//}
-
+	int xC=-1,yC=-1;
+	USHORT positions[9];
 	while (true) 
 	{
 		//zera imagens
 		memset(image.data,0,sizeof(char)*3*640*480);
 		memset(imageDepth.data,0,sizeof(char)*3*320*240);
 		memset(imageSkel.data,0,sizeof(char)*3*320*240);
+		memset(positions, 0, sizeof(USHORT)*9);
 		//imagem de cor
 		hr = sensor->NuiImageStreamGetNextFrame(m_pVideoStreamHandle, 100, &pImageFrame);
 		if(hr != S_OK) {
@@ -265,44 +267,60 @@ int main() {
 			continue;
 		}
 		grabSkel();
+		
+		//pega orientacoes
+		if (skelIndex >= 0){
+			Vector4 j4 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[4];//ombro esquerdo
+			Vector4 j8 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[8];//ombro direito
+			Vector4 j9 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[9];//cotovelo direito
+			Vector4 j10 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[10];//pulso direito
+			Vector4 j11 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_HAND_RIGHT];//mão direita
+			int anguloOmbro, anguloCotovelo, anguloPulso;
+			getJointDepth(pDepth, j11, xC, yC, positions);
+			if (!(count%50)){
+				int atual=0;
+				printf("HAND DEPTH = %hd %hd %hd %hd %hd %hd %hd %hd %hd\n", positions[atual++],positions[atual++],positions[atual++],
+																					positions[atual++],positions[atual++],positions[atual++],
+																					positions[atual++],positions[atual++],positions[atual++]);
+			}
+
+			//angulo do ombro
+			//hr = threeJointAngle(j4,j8,j9,MOTOR_OMBRO,anguloOmbro);
+			//if (hr == S_OK){
+			//	if (!(count%50)) printf("OMBRO - %d graus :: ", anguloOmbro);
+			//	if(anguloOmbro > 0) {
+			//		angle[MOTOR_OMBRO] = anguloOmbro;
+			//	}
+			//}
+			//else printf("Nao pode pegar o angulo do ombro\n");
+			//angulo do cotovelo
+			//hr = threeJointAngle(j8,j9,j10,MOTOR_COTOVELO,anguloCotovelo);
+			//if (hr == S_OK){
+			//	if (!(count%50)) printf("COTOVELO - %d graus\n", anguloCotovelo);
+			//	
+			//	if(anguloCotovelo > 0) {
+			//		angle[MOTOR_COTOVELO] = anguloCotovelo;
+			//	}
+			//}
+			//else printf("Nao pode pegar o angulo do cotovelo\n");
+			//angulo do pulso
+			//hr = threeJointAngle(j9,j10,j11,MOTOR_PULSO,anguloPulso);
+			//if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
+			//else printf("Nao pode pegar o angulo do pulso\n\n");			
+		}
+		else{
+			xC=-1;
+			yC=-1;
+		}
+		if(xC>=0){
+			cv::circle(imageDepth, cv::Point(xC, yC), 2, cv::Scalar(87,122,185,0));
+		}
+		count++;
+
 		//joga imagens na tela
 		imshow("RGB", image);
 		imshow("Depth", imageDepth);
 		imshow("Requeleto", imageSkel);
-		
-		//pega orientacoes
-		if (skelIndex >= 0){
-			Vector4 j4 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[4];
-			Vector4 j8 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[8];
-			Vector4 j9 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[9];
-			Vector4 j10 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[10];
-			Vector4 j11 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[11];
-			int anguloOmbro, anguloCotovelo, anguloPulso;
-			//angulo do ombro
-			hr = threeJointAngle(j4,j8,j9,MOTOR_OMBRO,anguloOmbro);
-			if (hr == S_OK){
-				if (!(count%50)) printf("O J4 - J8 - J9 = %d graus\n", anguloOmbro);
-				if(anguloOmbro > 0) {
-					angle[MOTOR_OMBRO] = anguloOmbro;
-				}
-			}
-			else printf("Não pode pegar o angulo do ombro\n");
-			//angulo do cotovelo
-			hr = threeJointAngle(j8,j9,j10,MOTOR_COTOVELO,anguloCotovelo);
-			if (hr == S_OK){
-				if (!(count%50)) printf("C J8 - J9 - J10 = %d graus\n", anguloCotovelo);
-				
-				if(anguloCotovelo > 0) {
-					angle[MOTOR_COTOVELO] = anguloCotovelo;
-				}
-			}
-			else printf("Não pode pegar o angulo do cotovelo\n");
-			//angulo do pulso
-			//hr = threeJointAngle(j9,j10,j11,MOTOR_PULSO,anguloPulso);
-			//if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
-			//else printf("Não pode pegar o angulo do pulso\n\n");			
-		}
-		count++;
 		char c = cvWaitKey(10);
 		if((char) c == 27 ) {
 			break;
