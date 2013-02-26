@@ -150,7 +150,7 @@ void* streamArduino(void* arg) {
 				lastangle[MOTOR_OMBRO] = angle[MOTOR_OMBRO];
 		}
 		if (abs(lastangle[MOTOR_COTOVELO]-angle[MOTOR_COTOVELO])>5){
-				printf("sending command to arduino... %d: %d\n", MOTOR_COTOVELO, angle[MOTOR_COTOVELO]);
+			//	printf("sending command to arduino... %d: %d\n", MOTOR_COTOVELO, angle[MOTOR_COTOVELO]);
 				if(angle[MOTOR_COTOVELO] < 180) send2Ard(MOTOR_COTOVELO, angle[MOTOR_COTOVELO]);
 				lastangle[MOTOR_COTOVELO] = angle[MOTOR_COTOVELO];
 		}
@@ -235,7 +235,7 @@ int main() {
 	//	exit(0);
 	//}
 	int xC=-1,yC=-1;
-	USHORT positions[9];
+	USHORT positions[9], pescoco[9];
 	while (true) 
 	{
 		//zera imagens
@@ -270,28 +270,34 @@ int main() {
 		
 		//pega orientacoes
 		if (skelIndex >= 0){
-			Vector4 j4 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[4];//ombro esquerdo
+			Vector4 j2 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[2];//pescoço
+			Vector4 j1 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[1];//umbigo
 			Vector4 j8 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_RIGHT];//ombro direito
 			Vector4 j9 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_RIGHT];//cotovelo direito
 			Vector4 j10 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_WRIST_RIGHT];//pulso direito
 			Vector4 j11 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_HAND_RIGHT];//mão direita
 			int anguloOmbro, anguloCotovelo, anguloPulso;
-			getJointDepth(pDepth, j11, xC, yC, positions);
-			if (!(count%50)){
-				int atual=0;
-				printf("HAND DEPTH = %hd %hd %hd %hd %hd %hd %hd %hd %hd\n", positions[atual++],positions[atual++],positions[atual++],
-																					positions[atual++],positions[atual++],positions[atual++],
-																					positions[atual++],positions[atual++],positions[atual++]);
-			}
+			//getJointDepth(pDepth, j2, xC, yC, pescoco);
+			//getJointDepth(pDepth, j11, xC, yC, positions);
+			//if (!(count%50)){
+			//	int atual=0;
+			//	int atual2=0;
+			//	printf("NECK DEPTH = %hd %hd %hd %hd %hd %hd %hd %hd %hd\n\n", pescoco[atual2++],pescoco[atual2++],pescoco[atual2++],
+			//																		pescoco[atual2++],pescoco[atual2++],pescoco[atual2++],
+			//																		pescoco[atual2++],pescoco[atual2++],pescoco[atual2++]);
+			//	printf("HAND DEPTH = %hd %hd %hd %hd %hd %hd %hd %hd %hd\n", positions[atual++],positions[atual++],positions[atual++],
+			//																		positions[atual++],positions[atual++],positions[atual++],
+			//																		positions[atual++],positions[atual++],positions[atual++]);
+			//}
 
 			//angulo do ombro
-			//hr = threeJointAngle(j4,j8,j9,MOTOR_OMBRO,anguloOmbro);
-			//if (hr == S_OK){
-			//	if (!(count%50)) printf("OMBRO - %d graus :: ", anguloOmbro);
-			//	if(anguloOmbro > 0) {
-			//		angle[MOTOR_OMBRO] = anguloOmbro;
-			//	}
-			//}
+			hr = threeJointAngle(j1,j8,j9,MOTOR_OMBRO,anguloOmbro);
+			if (hr == S_OK){
+				if (!(count%50)) printf("OMBRO - %d graus\n", anguloOmbro);
+				if(anguloOmbro > 0) {
+					angle[MOTOR_OMBRO] = anguloOmbro;
+				}
+			}
 			//else printf("Nao pode pegar o angulo do ombro\n");
 			//angulo do cotovelo
 			//hr = threeJointAngle(j8,j9,j10,MOTOR_COTOVELO,anguloCotovelo);
@@ -305,7 +311,7 @@ int main() {
 			//else printf("Nao pode pegar o angulo do cotovelo\n");
 			//angulo do pulso
 			//hr = threeJointAngle(j9,j10,j11,MOTOR_PULSO,anguloPulso);
-			//if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
+			if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
 			//else printf("Nao pode pegar o angulo do pulso\n\n");			
 		}
 		else{
