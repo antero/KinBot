@@ -130,7 +130,7 @@ bool valid = false;
 
 void* streamArduino(void* arg) {
 	static int lastangle[6] = {-1,-1,-1,-1,-1,-1};
-
+	static int relativeDiff = 2;
 	HRESULT hr = connectArduino();
 	if (hr != S_OK){
 		printf("Erro ao abrir comunicacao com arduino\n");
@@ -139,27 +139,27 @@ void* streamArduino(void* arg) {
 
 	while(true) {
 		
-		if (abs(lastangle[MOTOR_BASE]-angle[MOTOR_BASE])>5){
+		if (abs(lastangle[MOTOR_BASE]-angle[MOTOR_BASE])>relativeDiff){
 				printf("sending command to arduino... %d: %d\n", MOTOR_BASE, angle[MOTOR_BASE]);
 				if(angle[MOTOR_BASE] < 180) send2Ard(MOTOR_BASE, angle[MOTOR_BASE]);
 				lastangle[MOTOR_BASE] = angle[MOTOR_BASE];
 		}
-		if (abs(lastangle[MOTOR_OMBRO]-angle[MOTOR_OMBRO])>5){
+		if (abs(lastangle[MOTOR_OMBRO]-angle[MOTOR_OMBRO])>relativeDiff){
 				printf("sending command to arduino... %d: %d\n", MOTOR_OMBRO, angle[MOTOR_OMBRO]);
 				if(angle[MOTOR_OMBRO] < 180) send2Ard(MOTOR_OMBRO, angle[MOTOR_OMBRO]);
 				lastangle[MOTOR_OMBRO] = angle[MOTOR_OMBRO];
 		}
-		if (abs(lastangle[MOTOR_COTOVELO]-angle[MOTOR_COTOVELO])>5){
+		if (abs(lastangle[MOTOR_COTOVELO]-angle[MOTOR_COTOVELO])>relativeDiff){
 			//	printf("sending command to arduino... %d: %d\n", MOTOR_COTOVELO, angle[MOTOR_COTOVELO]);
 				if(angle[MOTOR_COTOVELO] < 180) send2Ard(MOTOR_COTOVELO, angle[MOTOR_COTOVELO]);
 				lastangle[MOTOR_COTOVELO] = angle[MOTOR_COTOVELO];
 		}
-		if (abs(lastangle[MOTOR_PULSO]-angle[MOTOR_PULSO])>5){
+		if (abs(lastangle[MOTOR_PULSO]-angle[MOTOR_PULSO])>relativeDiff){
 				printf("sending command to arduino... %d: %d\n", MOTOR_PULSO, angle[MOTOR_PULSO]);
 				if(angle[MOTOR_PULSO] < 180) send2Ard(MOTOR_PULSO, angle[MOTOR_PULSO]);
 				lastangle[MOTOR_PULSO] = angle[MOTOR_PULSO];
 		}
-		if (abs(lastangle[MOTOR_GARRA]-angle[MOTOR_GARRA])>5){
+		if (abs(lastangle[MOTOR_GARRA]-angle[MOTOR_GARRA])>relativeDiff){
 				printf("sending command to arduino... %d: %d\n", MOTOR_GARRA, angle[MOTOR_GARRA]);
 				if(angle[MOTOR_GARRA] < 180) send2Ard(MOTOR_GARRA, angle[MOTOR_GARRA]);
 				lastangle[MOTOR_GARRA] = angle[MOTOR_GARRA];
@@ -230,10 +230,10 @@ int main() {
 	//exibe streams
 	int count = 0;
 
-	//if (pthread_create(&thread_c, NULL, streamArduino, NULL)) {
-	//    printf("Failed to create arduino communication thread.\n");
-	//	exit(0);
-	//}
+	if (pthread_create(&thread_c, NULL, streamArduino, NULL)) {
+	    printf("Failed to create arduino communication thread.\n");
+		exit(0);
+	}
 	int xC=-1,yC=-1;
 	USHORT positions[9], pescoco[9];
 	while (true) 
@@ -295,25 +295,30 @@ int main() {
 			vecsub(j1,j2,spineVector); vecsub(j9,j8,armVector);
 			hr = twoVectorAngle(spineVector,armVector,MOTOR_OMBRO,anguloOmbro);
 			if (hr == S_OK){
-				if (!(count%50)) printf("OMBRO - %d graus\n", anguloOmbro);
+				if (!(count%50)) printf("OMBRO - %d graus :: ", anguloOmbro);
 				if(anguloOmbro > 0) {
 					angle[MOTOR_OMBRO] = anguloOmbro;
 				}
 			}
 			//else printf("Nao pode pegar o angulo do ombro\n");
 			//angulo do cotovelo
-			//hr = threeJointAngle(j8,j9,j10,MOTOR_COTOVELO,anguloCotovelo);
-			//if (hr == S_OK){
-			//	if (!(count%50)) printf("COTOVELO - %d graus\n", anguloCotovelo);
-			//	
-			//	if(anguloCotovelo > 0) {
-			//		angle[MOTOR_COTOVELO] = anguloCotovelo;
-			//	}
-			//}
+			hr = threeJointAngle(j8,j9,j10,MOTOR_COTOVELO,anguloCotovelo);
+			if (hr == S_OK){
+				if (!(count%50)) printf("COTOVELO - %d graus\n", anguloCotovelo);
+				
+				if(anguloCotovelo > 0) {
+					angle[MOTOR_COTOVELO] = anguloCotovelo;
+				}
+			}
 			//else printf("Nao pode pegar o angulo do cotovelo\n");
 			//angulo do pulso
 			//hr = threeJointAngle(j9,j10,j11,MOTOR_PULSO,anguloPulso);
-			//if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
+			//if (hr == S_OK){
+			//	if (!(count%50)) printf("PULSO - %d graus\n\n", anguloPulso);
+			//	if(anguloPulso > 0) {
+			//		angle[MOTOR_PULSO] = anguloPulso;
+			//	}
+			//}
 			//else printf("Nao pode pegar o angulo do pulso\n\n");			
 		}
 		else{
