@@ -31,39 +31,30 @@ float module(Vector4 vec){
 }
 
 //retorn angulo entre 3 juntas
-HRESULT threeJointAngle(Vector4 j1, Vector4 j2, Vector4 j3, int motor, int &result){
-	Vector4 v1, v2;
-	vecsub(j1, j2, v1);
-	vecsub(j3, j2, v2);
+HRESULT twoVectorAngle(Vector4 v1, Vector4 v2, int motor, int &result){
 	float cosTeta = dotproduct(v1, v2) / (module(v1) * module(v2)) ;
 	float degree = acos(cosTeta)* 180.0 / PI;
-	FLOAT x1=0, y1=0, x2=0, y2=0;
 	switch (motor){
 	case MOTOR_BASE:
-		break;
 	case MOTOR_OMBRO:
-		//degree = degree - 90;
-		//NuiTransformSkeletonToDepthImage(j3, &(x2), &(y2), NUI_IMAGE_RESOLUTION_320x240);
-		//NuiTransformSkeletonToDepthImage(j1, &(x1), &(y1), NUI_IMAGE_RESOLUTION_320x240);
-		//if((y2*1.1) > y1){
-		//	degree = degree - 90;
-		//}
-		//else{
-		//	degree = 90 + (180 - degree);
-		//}
-		degree-=30;
 		break;
 	case MOTOR_COTOVELO:
 		degree = 180-degree;
 		break;
 	case MOTOR_PULSO:
-		break;
 	case MOTOR_GARRA:
 	default:
 		break;
 	}
 	if (degree < 0 || degree > 180) return S_FALSE;
 	else {result = ((int) degree); return S_OK;}
+}
+
+HRESULT threeJointAngle(Vector4 j1, Vector4 j2, Vector4 j3, int motor, int &result){
+	Vector4 v1, v2;
+	vecsub(j1, j2, v1);
+	vecsub(j3, j2, v2);
+	return twoVectorAngle(v1, v2, motor, result);
 }
 
 void getJointDepth(USHORT *pDepth, Vector4 joint, int &x, int &y, USHORT *positions){

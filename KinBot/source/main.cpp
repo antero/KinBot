@@ -270,8 +270,8 @@ int main() {
 		
 		//pega orientacoes
 		if (skelIndex >= 0){
-			Vector4 j2 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[2];//pescoço
-			Vector4 j1 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[1];//umbigo
+			Vector4 j1 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SPINE];//espinha dorsal
+			Vector4 j2 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_CENTER];//pescoço
 			Vector4 j8 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_RIGHT];//ombro direito
 			Vector4 j9 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_RIGHT];//cotovelo direito
 			Vector4 j10 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_WRIST_RIGHT];//pulso direito
@@ -291,7 +291,9 @@ int main() {
 			//}
 
 			//angulo do ombro
-			hr = threeJointAngle(j1,j8,j9,MOTOR_OMBRO,anguloOmbro);
+			Vector4 spineVector, armVector;
+			vecsub(j1,j2,spineVector); vecsub(j9,j8,armVector);
+			hr = twoVectorAngle(spineVector,armVector,MOTOR_OMBRO,anguloOmbro);
 			if (hr == S_OK){
 				if (!(count%50)) printf("OMBRO - %d graus\n", anguloOmbro);
 				if(anguloOmbro > 0) {
@@ -311,7 +313,7 @@ int main() {
 			//else printf("Nao pode pegar o angulo do cotovelo\n");
 			//angulo do pulso
 			//hr = threeJointAngle(j9,j10,j11,MOTOR_PULSO,anguloPulso);
-			if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
+			//if (hr == S_OK) ;//printf("P J9 - J10 - J11 = %d graus\n\n", anguloPulso);
 			//else printf("Nao pode pegar o angulo do pulso\n\n");			
 		}
 		else{
