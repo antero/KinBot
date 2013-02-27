@@ -155,7 +155,7 @@ void* streamArduino(void* arg) {
 				lastangle[MOTOR_COTOVELO] = angle[MOTOR_COTOVELO];
 		}
 		if (abs(lastangle[MOTOR_PULSO]-angle[MOTOR_PULSO])>relativeDiff){
-				printf("sending command to arduino... %d: %d\n", MOTOR_PULSO, angle[MOTOR_PULSO]);
+			//	printf("sending command to arduino... %d: %d\n", MOTOR_PULSO, angle[MOTOR_PULSO]);
 				if(angle[MOTOR_PULSO] < 180) send2Ard(MOTOR_PULSO, angle[MOTOR_PULSO]);
 				lastangle[MOTOR_PULSO] = angle[MOTOR_PULSO];
 		}
@@ -293,32 +293,32 @@ int main() {
 			//angulo do ombro
 			Vector4 spineVector, armVector;
 			vecsub(j1,j2,spineVector); vecsub(j9,j8,armVector);
-			hr = twoVectorAngle(spineVector,armVector,MOTOR_OMBRO,anguloOmbro);
-			if (hr == S_OK){
-				if (!(count%50)) printf("OMBRO - %d graus :: ", anguloOmbro);
-				if(anguloOmbro > 0) {
-					angle[MOTOR_OMBRO] = anguloOmbro;
-				}
-			}
-			//else printf("Nao pode pegar o angulo do ombro\n");
-			//angulo do cotovelo
-			hr = threeJointAngle(j8,j9,j10,MOTOR_COTOVELO,anguloCotovelo);
-			if (hr == S_OK){
-				if (!(count%50)) printf("COTOVELO - %d graus\n", anguloCotovelo);
-				
-				if(anguloCotovelo > 0) {
-					angle[MOTOR_COTOVELO] = anguloCotovelo;
-				}
-			}
-			//else printf("Nao pode pegar o angulo do cotovelo\n");
-			//angulo do pulso
-			//hr = threeJointAngle(j9,j10,j11,MOTOR_PULSO,anguloPulso);
+			//hr = twoVectorAngle(spineVector,armVector,MOTOR_OMBRO,anguloOmbro);
 			//if (hr == S_OK){
-			//	if (!(count%50)) printf("PULSO - %d graus\n\n", anguloPulso);
-			//	if(anguloPulso > 0) {
-			//		angle[MOTOR_PULSO] = anguloPulso;
+			//	if (!(count%50)) printf("OMBRO - %d graus :: ", anguloOmbro);
+			//	if(anguloOmbro > 0) {
+			//		angle[MOTOR_OMBRO] = anguloOmbro;
 			//	}
 			//}
+			//else printf("Nao pode pegar o angulo do ombro\n");
+			//angulo do cotovelo
+			//hr = threeJointAngle(j8,j9,j10,MOTOR_COTOVELO,anguloCotovelo);
+			//if (hr == S_OK){
+			//	if (!(count%50)) printf("COTOVELO - %d graus\n", anguloCotovelo);
+			//	
+			//	if(anguloCotovelo > 0) {
+			//		angle[MOTOR_COTOVELO] = anguloCotovelo;
+			//	}
+			//}
+			//else printf("Nao pode pegar o angulo do cotovelo\n");
+			//angulo do pulso
+			hr = threeJointAngle(j9,j10,j11,MOTOR_PULSO,anguloPulso);
+			if (hr == S_OK){
+				if (!(count%50)) printf("PULSO - %d graus\n\n", anguloPulso);
+				if(anguloPulso > 0) {
+					angle[MOTOR_PULSO] = anguloPulso;
+				}
+			}
 			//else printf("Nao pode pegar o angulo do pulso\n\n");			
 		}
 		else{

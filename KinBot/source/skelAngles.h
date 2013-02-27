@@ -42,6 +42,8 @@ HRESULT twoVectorAngle(Vector4 v1, Vector4 v2, int motor, int &result){
 		degree = 180-degree;
 		break;
 	case MOTOR_PULSO:
+		//if (degree < 0 || degree > 90) degree = 500;
+		break;
 	case MOTOR_GARRA:
 	default:
 		break;
