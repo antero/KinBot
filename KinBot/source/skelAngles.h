@@ -40,6 +40,7 @@ HRESULT twoVectorAngle(Vector4 v1, Vector4 v2, int motor, int &result){
 		break;
 	case MOTOR_COTOVELO:
 		degree = 180-degree;
+		degree = 100-degree;
 		break;
 	case MOTOR_PULSO:
 		//if (degree < 0 || degree > 90) degree = 500;

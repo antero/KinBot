@@ -32,7 +32,6 @@ int skelIndex = -1;
 
 pthread_t thread_c;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-std::vector<int> commands[2];
 
 cv::Mat image;
 cv::Mat imageDepth;
@@ -145,7 +144,7 @@ void* streamArduino(void* arg) {
 				lastangle[MOTOR_BASE] = angle[MOTOR_BASE];
 		}
 		if (abs(lastangle[MOTOR_OMBRO]-angle[MOTOR_OMBRO])>relativeDiff){
-				printf("sending command to arduino... %d: %d\n", MOTOR_OMBRO, angle[MOTOR_OMBRO]);
+				//printf("sending command to arduino... %d: %d\n", MOTOR_OMBRO, angle[MOTOR_OMBRO]);
 				if(angle[MOTOR_OMBRO] < 180) send2Ard(MOTOR_OMBRO, angle[MOTOR_OMBRO]);
 				lastangle[MOTOR_OMBRO] = angle[MOTOR_OMBRO];
 		}
@@ -186,6 +185,7 @@ void* streamArduino(void* arg) {
 int main() {
 	int device=0;
 	INuiSensor* sensor;
+#pragma region begin_streams
 	//cria sensor
 	HRESULT hr = NuiCreateSensorByIndex(device, &sensor);
 	if (hr != S_OK){
@@ -208,7 +208,6 @@ int main() {
 	//abre stream RGB
 	image = cv::Mat(480, 640, CV_8UC3);
 	hr = sensor->NuiImageStreamOpen(NUI_IMAGE_TYPE_COLOR, NUI_IMAGE_RESOLUTION_640x480, 0, 2, 0, &m_pVideoStreamHandle);
-	
 	if(hr != S_OK) {
 		printf("Erro ao abrir stream RGB.\n");
 		exit(-1);
@@ -216,33 +215,36 @@ int main() {
 	//abre stream de profundidade
 	imageDepth = cv::Mat(240, 320, CV_8UC3);
 	hr = sensor->NuiImageStreamOpen(NUI_IMAGE_TYPE_DEPTH_AND_PLAYER_INDEX, NUI_IMAGE_RESOLUTION_320x240, 0, 2, 0, &m_pDepthStreamHandle);
-
 	if(hr != S_OK) {
 		printf("Erro ao abrir stream de profundidade.\n");
 		exit(-1);
 	}
+#pragma endregion
 
+	//cria janelas
 	cv::namedWindow("RGB", cv::WINDOW_AUTOSIZE);
 	cv::namedWindow("Depth", cv::WINDOW_AUTOSIZE);
 	cv::namedWindow("Requeleto", cv::WINDOW_AUTOSIZE);
 
 	memset(joints, 0, sizeof(FLOAT)*2*NUI_SKELETON_POSITION_COUNT);
-	//exibe streams
 	int count = 0;
 
+	//inicia comunicação com robô
 	if (pthread_create(&thread_c, NULL, streamArduino, NULL)) {
 	    printf("Failed to create arduino communication thread.\n");
 		exit(0);
 	}
-	int xC=-1,yC=-1;
-	USHORT positions[9], pescoco[9];
+
+	//variaveis para profundidade
+	//int xC=-1,yC=-1;
+	//USHORT positions[9], pescoco[9];
 	while (true) 
 	{
 		//zera imagens
 		memset(image.data,0,sizeof(char)*3*640*480);
 		memset(imageDepth.data,0,sizeof(char)*3*320*240);
 		memset(imageSkel.data,0,sizeof(char)*3*320*240);
-		memset(positions, 0, sizeof(USHORT)*9);
+//		memset(positions, 0, sizeof(USHORT)*9);
 		//imagem de cor
 		hr = sensor->NuiImageStreamGetNextFrame(m_pVideoStreamHandle, 100, &pImageFrame);
 		if(hr != S_OK) {
@@ -277,6 +279,8 @@ int main() {
 			Vector4 j10 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_WRIST_RIGHT];//pulso direito
 			Vector4 j11 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_HAND_RIGHT];//mão direita
 			int anguloOmbro, anguloCotovelo, anguloPulso;
+		
+			//profundidade
 			//getJointDepth(pDepth, j2, xC, yC, pescoco);
 			//getJointDepth(pDepth, j11, xC, yC, positions);
 			//if (!(count%50)){
@@ -293,23 +297,23 @@ int main() {
 			//angulo do ombro
 			Vector4 spineVector, armVector;
 			vecsub(j1,j2,spineVector); vecsub(j9,j8,armVector);
-			//hr = twoVectorAngle(spineVector,armVector,MOTOR_OMBRO,anguloOmbro);
-			//if (hr == S_OK){
-			//	if (!(count%50)) printf("OMBRO - %d graus :: ", anguloOmbro);
-			//	if(anguloOmbro > 0) {
-			//		angle[MOTOR_OMBRO] = anguloOmbro;
-			//	}
-			//}
+			hr = twoVectorAngle(spineVector,armVector,MOTOR_OMBRO,anguloOmbro);
+			if (hr == S_OK){
+				if (!(count%50)) printf("OMBRO - %d graus :: ", anguloOmbro);
+				if(anguloOmbro > 0) {
+					angle[MOTOR_OMBRO] = anguloOmbro;
+				}
+			}
 			//else printf("Nao pode pegar o angulo do ombro\n");
 			//angulo do cotovelo
-			//hr = threeJointAngle(j8,j9,j10,MOTOR_COTOVELO,anguloCotovelo);
-			//if (hr == S_OK){
-			//	if (!(count%50)) printf("COTOVELO - %d graus\n", anguloCotovelo);
-			//	
-			//	if(anguloCotovelo > 0) {
-			//		angle[MOTOR_COTOVELO] = anguloCotovelo;
-			//	}
-			//}
+			hr = threeJointAngle(j8,j9,j10,MOTOR_COTOVELO,anguloCotovelo);
+			if (hr == S_OK){
+				if (!(count%50)) printf("COTOVELO - %d graus :: \n", anguloCotovelo);
+				
+				if(anguloCotovelo > 0) {
+					angle[MOTOR_COTOVELO] = anguloCotovelo;
+				}
+			}
 			//else printf("Nao pode pegar o angulo do cotovelo\n");
 			//angulo do pulso
 			hr = threeJointAngle(j9,j10,j11,MOTOR_PULSO,anguloPulso);
@@ -321,13 +325,13 @@ int main() {
 			}
 			//else printf("Nao pode pegar o angulo do pulso\n\n");			
 		}
-		else{
-			xC=-1;
-			yC=-1;
-		}
-		if(xC>=0){
-			cv::circle(imageDepth, cv::Point(xC, yC), 2, cv::Scalar(87,122,185,0));
-		}
+		//else{
+		//	xC=-1;
+		//	yC=-1;
+		//}
+		//if(xC>=0){ 
+		//	cv::circle(imageDepth, cv::Point(xC, yC), 2, cv::Scalar(87,122,185,0));
+		//}
 		count++;
 
 		//joga imagens na tela
@@ -343,6 +347,7 @@ int main() {
 		sensor->NuiImageStreamReleaseFrame(m_pDepthStreamHandle, &pDepthFrame);
 		
 	}
+
 	cvWaitKey();
 	sensor->NuiShutdown();
 	shutdownArduino();
