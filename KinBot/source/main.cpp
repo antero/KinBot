@@ -279,32 +279,10 @@ int main() {
 			getJointDepth(pDepth, j11, arr_rightHand_depth);
 			getJointDepth(pDepth, j7 , arr_leftHand_depth);
 			getJointDepth(pDepth, j2 , arr_neck_depth);
-			if (!(count%50)){
-				//printf("NECK DEPTH = %hd %hd %hd %hd %hd %hd %hd %hd %hd\n", arr_neck_depth[0],arr_neck_depth[1],arr_neck_depth[2],
-				//																	arr_neck_depth[3],arr_neck_depth[4],arr_neck_depth[5],
-				//																	arr_neck_depth[6],arr_neck_depth[7],arr_neck_depth[8]);
-				printf("HAND DEPTH = %hd %hd %hd %hd %hd %hd %hd %hd %hd\n", arr_rightHand_depth[0],arr_rightHand_depth[1],arr_rightHand_depth[2],
-																					arr_rightHand_depth[3],arr_rightHand_depth[4],arr_rightHand_depth[5],
-																					arr_rightHand_depth[6],arr_rightHand_depth[7],arr_rightHand_depth[8]);
-			}
 
 			USHORT right_hand_depth = getMedian(arr_rightHand_depth);
 			USHORT left_hand_depth = getMedian(arr_leftHand_depth);
 			USHORT neck_depth = getMedian(arr_neck_depth);
-
-			//open and close claw
-			if (abs(neck_depth-right_hand_depth) > depth_diff){
-				if (neck_depth > right_hand_depth){
-					if (angle[SERVO_HAND] + 1 <= 180){
-						angle[SERVO_HAND] += 1;
-					}
-				}
-				else{
-					if (angle[SERVO_HAND] - 1 >= 0){
-						angle[SERVO_HAND] -= 1;
-					}
-				}
-			}
 
 			//move base around
 			if (abs(neck_depth-left_hand_depth) > depth_diff){
@@ -325,7 +303,7 @@ int main() {
 			//vecsub(j1,j2,spineVector); vecsub(j9,j8,armVector);
 			//hr = twoVectorAngle(spineVector,armVector,SERVO_SHOULDER,angle_shoulder);
 			//if (hr == S_OK){
-			//	if (!(count%50)) printf("SHOULDER - %d graus :: ", angle_shoulder);
+			//	if (!(count%50)) printf("SHOULDER - %d degrees :: ", angle_shoulder);
 			//	if(angle_shoulder > 0) {
 			//		angle[SERVO_SHOULDER] = angle_shoulder;
 			//	}
@@ -335,22 +313,38 @@ int main() {
 			////right elbow angle
 			//hr = threeJointAngle(j8,j9,j10,SERVO_ELBOW,angle_elbow);
 			//if (hr == S_OK){
-			//	if (!(count%50)) printf("ELBOW - %d graus :: \n", angle_elbow);
+			//	if (!(count%50)) printf("ELBOW - %d degrees :: \n", angle_elbow);
 			//	
 			//	if(angle_elbow > 0) {
 			//		angle[SERVO_ELBOW] = angle_elbow;
 			//	}
 			//}
-			////else printf("Nao pode pegar o angulo do cotovelo\n");
+			////else printf("Cannot grab right elbow angle\n");
+			
 			////right wrist angle
 			//hr = threeJointAngle(j9,j10,j11,SERVO_WRIST,angle_wrist);
 			//if (hr == S_OK){
-			//	if (!(count%50)) printf("WRIST - %d graus\n\n", angle_wrist);
+			//	if (!(count%50)) printf("WRIST - %d degrees :: ", angle_wrist);
 			//	if(angle_wrist > 0) {
 			//		angle[SERVO_WRIST] = angle_wrist;
 			//	}
 			//}
-			////else printf("Nao pode pegar o angulo do pulso\n\n");			
+			////else printf("Cannot grab right wrist angle\n\n");
+
+			//open and close claw
+			if (abs(neck_depth-right_hand_depth) > depth_diff){
+				if (neck_depth > right_hand_depth){
+					if (angle[SERVO_HAND] + 1 <= 180){
+						angle[SERVO_HAND] += 1;
+					}
+				}
+				else{
+					if (angle[SERVO_HAND] - 1 >= 0){
+						angle[SERVO_HAND] -= 1;
+					}
+				}
+				if (!(count%50)) printf("CLAW - %u degrees\n\n", angle[SERVO_HAND]);
+			}
 		}
 
 		count++;
