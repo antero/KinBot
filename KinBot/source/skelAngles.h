@@ -6,15 +6,18 @@
 #include <NuiApi.h>
 #include <math.h>
 #include <stdio.h>
+#include <algorithm>
+#include <vector>
 
-#define SERVO_BASE				1
-#define SERVO_SHOULDER_RIGHT	2
-#define SERVO_ELBOW_RIGHT		3
-#define SERVO_WRIST_RIGHT		4
-#define SERVO_HAND_RIGHT		5
+#define SERVO_BASE			1
+#define SERVO_SHOULDER		2
+#define SERVO_ELBOW			3
+#define SERVO_WRIST			4
+#define SERVO_HAND			5
 
-#define PI 3.14159265
-#define posi(x,y) x+y*320
+#define PI					3.14159265
+#define posi(x,y)			x+y*320
+#define JOINT_NEIGHBORHOOD	9
 
 
 void vecsub(Vector4 vec1, Vector4 vec2, Vector4 &res){
@@ -37,15 +40,15 @@ HRESULT twoVectorAngle(Vector4 v1, Vector4 v2, int motor, int &result){
 	float degree = acos(cosTeta)* 180.0 / PI;
 	switch (motor){
 	case SERVO_BASE:
-	case SERVO_SHOULDER_RIGHT:
+	case SERVO_SHOULDER:
 		break;
-	case SERVO_ELBOW_RIGHT:
+	case SERVO_ELBOW:
 		degree = 180-degree;
 		degree = 100-degree;
 		break;
-	case SERVO_WRIST_RIGHT:
+	case SERVO_WRIST:
 		break;
-	case SERVO_HAND_RIGHT:
+	case SERVO_HAND:
 	default:
 		break;
 	}
@@ -75,6 +78,12 @@ void getJointDepth(USHORT *pDepth, Vector4 joint, USHORT *positions){
 			positions[loc] = NuiDepthPixelToDepth(pDepth[posi((x+i),(y+j))]);
 		}
 	}
+}
+
+USHORT getMedian(USHORT *values){
+	std::vector<USHORT> vector(values, values+JOINT_NEIGHBORHOOD);
+	std::sort(vector.begin(), vector.begin()+JOINT_NEIGHBORHOOD);
+	return vector.at(JOINT_NEIGHBORHOOD/2);
 }
 
 #endif

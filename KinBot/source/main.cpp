@@ -2,10 +2,12 @@
 KinBot
 Kinect with Arduino project!
 
-This projects needs the following libraries:
+This projects requires the following libraries:
 
 # OpenCV v2.4.3 x86
 # Kinect SDK v1.6 x86
+
+By GRVM team!
 */
 
 #include "skelAngles.h"
@@ -13,7 +15,6 @@ This projects needs the following libraries:
 #include <opencv2\opencv.hpp>
 
 #include <pthread.h>
-#include <vector>
 
 HANDLE m_pVideoStreamHandle;
 HANDLE m_pDepthStreamHandle;
@@ -141,25 +142,25 @@ void* streamArduino(void* arg) {
 				if(angle[SERVO_BASE] < 180) send2Ard(SERVO_BASE, angle[SERVO_BASE]);
 				lastangle[SERVO_BASE] = angle[SERVO_BASE];
 		}
-		if (abs(lastangle[SERVO_SHOULDER_RIGHT]-angle[SERVO_SHOULDER_RIGHT])>relativeDiff){
-				//printf("sending command to arduino... %d: %d\n", SERVO_SHOULDER_RIGHT, angle[SERVO_SHOULDER_RIGHT]);
-				if(angle[SERVO_SHOULDER_RIGHT] < 180) send2Ard(SERVO_SHOULDER_RIGHT, angle[SERVO_SHOULDER_RIGHT]);
-				lastangle[SERVO_SHOULDER_RIGHT] = angle[SERVO_SHOULDER_RIGHT];
+		if (abs(lastangle[SERVO_SHOULDER]-angle[SERVO_SHOULDER])>relativeDiff){
+				//printf("sending command to arduino... %d: %d\n", SERVO_SHOULDER, angle[SERVO_SHOULDER]);
+				if(angle[SERVO_SHOULDER] < 180) send2Ard(SERVO_SHOULDER, angle[SERVO_SHOULDER]);
+				lastangle[SERVO_SHOULDER] = angle[SERVO_SHOULDER];
 		}
-		if (abs(lastangle[SERVO_ELBOW_RIGHT]-angle[SERVO_ELBOW_RIGHT])>relativeDiff){
-				//printf("sending command to arduino... %d: %d\n", SERVO_ELBOW_RIGHT, angle[SERVO_ELBOW_RIGHT]);
-				if(angle[SERVO_ELBOW_RIGHT] < 180) send2Ard(SERVO_ELBOW_RIGHT, angle[SERVO_ELBOW_RIGHT]);
-				lastangle[SERVO_ELBOW_RIGHT] = angle[SERVO_ELBOW_RIGHT];
+		if (abs(lastangle[SERVO_ELBOW]-angle[SERVO_ELBOW])>relativeDiff){
+				//printf("sending command to arduino... %d: %d\n", SERVO_ELBOW, angle[SERVO_ELBOW]);
+				if(angle[SERVO_ELBOW] < 180) send2Ard(SERVO_ELBOW, angle[SERVO_ELBOW]);
+				lastangle[SERVO_ELBOW] = angle[SERVO_ELBOW];
 		}
-		if (abs(lastangle[SERVO_WRIST_RIGHT]-angle[SERVO_WRIST_RIGHT])>relativeDiff){
-				//printf("sending command to arduino... %d: %d\n", SERVO_WRIST_RIGHT, angle[SERVO_WRIST_RIGHT]);
-				if(angle[SERVO_WRIST_RIGHT] < 180) send2Ard(SERVO_WRIST_RIGHT, angle[SERVO_WRIST_RIGHT]);
-				lastangle[SERVO_WRIST_RIGHT] = angle[SERVO_WRIST_RIGHT];
+		if (abs(lastangle[SERVO_WRIST]-angle[SERVO_WRIST])>relativeDiff){
+				//printf("sending command to arduino... %d: %d\n", SERVO_WRIST, angle[SERVO_WRIST]);
+				if(angle[SERVO_WRIST] < 180) send2Ard(SERVO_WRIST, angle[SERVO_WRIST]);
+				lastangle[SERVO_WRIST] = angle[SERVO_WRIST];
 		}
-		if (abs(lastangle[SERVO_HAND_RIGHT]-angle[SERVO_HAND_RIGHT])>relativeDiff){
-				//printf("sending command to arduino... %d: %d\n", SERVO_HAND_RIGHT, angle[SERVO_HAND_RIGHT]);
-				if(angle[SERVO_HAND_RIGHT] < 180) send2Ard(SERVO_HAND_RIGHT, angle[SERVO_HAND_RIGHT]);
-				lastangle[SERVO_HAND_RIGHT] = angle[SERVO_HAND_RIGHT];
+		if (abs(lastangle[SERVO_HAND]-angle[SERVO_HAND])>relativeDiff){
+				//printf("sending command to arduino... %d: %d\n", SERVO_HAND, angle[SERVO_HAND]);
+				if(angle[SERVO_HAND] < 180) send2Ard(SERVO_HAND, angle[SERVO_HAND]);
+				lastangle[SERVO_HAND] = angle[SERVO_HAND];
 		}
 		
 		Sleep(10);
@@ -173,7 +174,8 @@ int main() {
 	INuiSensor* sensor;
 
 	//depth variables
-	USHORT rightHandDepth[9], neckDepth[9];
+	USHORT arr_rightHand_depth[JOINT_NEIGHBORHOOD], arr_leftHand_depth[JOINT_NEIGHBORHOOD], arr_neck_depth[JOINT_NEIGHBORHOOD];
+	int depth_diff = 300;
 
 #pragma region begin_streams
 	//create sensor
@@ -214,16 +216,16 @@ int main() {
 	//initialize windows
 	cv::namedWindow("RGB", cv::WINDOW_AUTOSIZE);
 	cv::namedWindow("Depth", cv::WINDOW_AUTOSIZE);
-	cv::namedWindow("Requeleto", cv::WINDOW_AUTOSIZE);
+	cv::namedWindow("Skeleton", cv::WINDOW_AUTOSIZE);
 
 	memset(joints, 0, sizeof(FLOAT)*2*NUI_SKELETON_POSITION_COUNT);
 	int count = 0;
 
 	//start arduino communication
-	//if (pthread_create(&thread_c, NULL, streamArduino, NULL)) {
-	//    printf("Failed to create arduino communication thread.\n");
-	//	exit(0);
-	//}
+	if (pthread_create(&thread_c, NULL, streamArduino, NULL)) {
+	    printf("Failed to create arduino communication thread.\n");
+		exit(0);
+	}
 
 	while (true) 
 	{
@@ -231,8 +233,9 @@ int main() {
 		memset(image.data,0,sizeof(char)*3*640*480);
 		memset(imageDepth.data,0,sizeof(char)*3*320*240);
 		memset(imageSkel.data,0,sizeof(char)*3*320*240);
-		memset(rightHandDepth, 0, sizeof(USHORT)*9);
-		memset(neckDepth, 0, sizeof(USHORT)*9);
+		memset(arr_rightHand_depth, 0, sizeof(USHORT)*JOINT_NEIGHBORHOOD);
+		memset(arr_leftHand_depth, 0, sizeof(USHORT)*JOINT_NEIGHBORHOOD);
+		memset(arr_neck_depth, 0, sizeof(USHORT)*JOINT_NEIGHBORHOOD);
 		
 		//color image
 		hr = sensor->NuiImageStreamGetNextFrame(m_pVideoStreamHandle, 100, &pImageFrame);
@@ -261,54 +264,89 @@ int main() {
 		
 		//grab orientations
 		if (skelIndex >= 0){
-			Vector4 j1 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SPINE];
-			Vector4 j2 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_CENTER];
-			Vector4 j8 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_RIGHT];
-			Vector4 j9 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_RIGHT];
+			Vector4 j1	= skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SPINE];
+			Vector4 j2	= skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_CENTER];
+			Vector4 j7	= skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_HAND_LEFT];
+			Vector4 j8	= skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_SHOULDER_RIGHT];
+			Vector4 j9	= skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_RIGHT];
 			Vector4 j10 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_WRIST_RIGHT];
 			Vector4 j11 = skeletonFrame.SkeletonData[skelIndex].SkeletonPositions[NUI_SKELETON_POSITION_HAND_RIGHT];
 		
-			int angle_shoulder, angle_elbow, angle_wrist;
+			int angle_shoulder=-1, angle_elbow=-1, angle_wrist=-1;
 		
 			//grab depth
-			getJointDepth(pDepth, j2, neckDepth);
-			getJointDepth(pDepth, j11, rightHandDepth);
+			getJointDepth(pDepth, j11, arr_rightHand_depth);
+			getJointDepth(pDepth, j7 , arr_leftHand_depth);
+			getJointDepth(pDepth, j2 , arr_neck_depth);
 			if (!(count%50)){
-				printf("NECK DEPTH = %hd %hd %hd %hd %hd %hd %hd %hd %hd\n", neckDepth[0],neckDepth[1],neckDepth[2],
-																					neckDepth[3],neckDepth[4],neckDepth[5],
-																					neckDepth[6],neckDepth[7],neckDepth[8]);
-				printf("HAND DEPTH = %hd %hd %hd %hd %hd %hd %hd %hd %hd\n\n", rightHandDepth[0],rightHandDepth[1],rightHandDepth[2],
-																					rightHandDepth[3],rightHandDepth[4],rightHandDepth[5],
-																					rightHandDepth[6],rightHandDepth[7],rightHandDepth[8]);
+				//printf("NECK DEPTH = %hd %hd %hd %hd %hd %hd %hd %hd %hd\n", arr_neck_depth[0],arr_neck_depth[1],arr_neck_depth[2],
+				//																	arr_neck_depth[3],arr_neck_depth[4],arr_neck_depth[5],
+				//																	arr_neck_depth[6],arr_neck_depth[7],arr_neck_depth[8]);
+				printf("HAND DEPTH = %hd %hd %hd %hd %hd %hd %hd %hd %hd\n", arr_rightHand_depth[0],arr_rightHand_depth[1],arr_rightHand_depth[2],
+																					arr_rightHand_depth[3],arr_rightHand_depth[4],arr_rightHand_depth[5],
+																					arr_rightHand_depth[6],arr_rightHand_depth[7],arr_rightHand_depth[8]);
+			}
+
+			USHORT right_hand_depth = getMedian(arr_rightHand_depth);
+			USHORT left_hand_depth = getMedian(arr_leftHand_depth);
+			USHORT neck_depth = getMedian(arr_neck_depth);
+
+			//open and close claw
+			if (abs(neck_depth-right_hand_depth) > depth_diff){
+				if (neck_depth > right_hand_depth){
+					if (angle[SERVO_HAND] + 1 <= 180){
+						angle[SERVO_HAND] += 1;
+					}
+				}
+				else{
+					if (angle[SERVO_HAND] - 1 >= 0){
+						angle[SERVO_HAND] -= 1;
+					}
+				}
+			}
+
+			//move base around
+			if (abs(neck_depth-left_hand_depth) > depth_diff){
+				if (neck_depth > left_hand_depth){
+					if (angle[SERVO_BASE] + 1 <= 180){
+						angle[SERVO_BASE] += 1;
+					}
+				}
+				else{
+					if (angle[SERVO_BASE] - 1 >= 0){
+						angle[SERVO_BASE] -= 1;
+					}
+				}
 			}
 
 			////right shoulder angle
 			//Vector4 spineVector, armVector;
 			//vecsub(j1,j2,spineVector); vecsub(j9,j8,armVector);
-			//hr = twoVectorAngle(spineVector,armVector,SERVO_SHOULDER_RIGHT,angle_shoulder);
+			//hr = twoVectorAngle(spineVector,armVector,SERVO_SHOULDER,angle_shoulder);
 			//if (hr == S_OK){
-			//	if (!(count%50)) printf("OMBRO - %d graus :: ", angle_shoulder);
+			//	if (!(count%50)) printf("SHOULDER - %d graus :: ", angle_shoulder);
 			//	if(angle_shoulder > 0) {
-			//		angle[SERVO_SHOULDER_RIGHT] = angle_shoulder;
+			//		angle[SERVO_SHOULDER] = angle_shoulder;
 			//	}
 			//}
-			////else printf("Nao pode pegar o angulo do ombro\n");
+			////else printf("Cannot grab right shoulder angle\n");
+
 			////right elbow angle
-			//hr = threeJointAngle(j8,j9,j10,SERVO_ELBOW_RIGHT,angle_elbow);
+			//hr = threeJointAngle(j8,j9,j10,SERVO_ELBOW,angle_elbow);
 			//if (hr == S_OK){
-			//	if (!(count%50)) printf("COTOVELO - %d graus :: \n", angle_elbow);
+			//	if (!(count%50)) printf("ELBOW - %d graus :: \n", angle_elbow);
 			//	
 			//	if(angle_elbow > 0) {
-			//		angle[SERVO_ELBOW_RIGHT] = angle_elbow;
+			//		angle[SERVO_ELBOW] = angle_elbow;
 			//	}
 			//}
 			////else printf("Nao pode pegar o angulo do cotovelo\n");
 			////right wrist angle
-			//hr = threeJointAngle(j9,j10,j11,SERVO_WRIST_RIGHT,angle_wrist);
+			//hr = threeJointAngle(j9,j10,j11,SERVO_WRIST,angle_wrist);
 			//if (hr == S_OK){
-			//	if (!(count%50)) printf("PULSO - %d graus\n\n", angle_wrist);
+			//	if (!(count%50)) printf("WRIST - %d graus\n\n", angle_wrist);
 			//	if(angle_wrist > 0) {
-			//		angle[SERVO_WRIST_RIGHT] = angle_wrist;
+			//		angle[SERVO_WRIST] = angle_wrist;
 			//	}
 			//}
 			////else printf("Nao pode pegar o angulo do pulso\n\n");			
@@ -319,7 +357,7 @@ int main() {
 		//render images on screen
 		imshow("RGB", image);
 		imshow("Depth", imageDepth);
-		imshow("Requeleto", imageSkel);
+		imshow("Skeleton", imageSkel);
 		char c = cvWaitKey(10);
 		if((char) c == 27 ) {
 			break;
