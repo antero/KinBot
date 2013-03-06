@@ -298,38 +298,38 @@ int main() {
 				}
 			}
 
-			////right shoulder angle
-			//Vector4 spineVector, armVector;
-			//vecsub(j1,j2,spineVector); vecsub(j9,j8,armVector);
-			//hr = twoVectorAngle(spineVector,armVector,SERVO_SHOULDER,angle_shoulder);
-			//if (hr == S_OK){
-			//	if (!(count%50)) printf("SHOULDER - %d degrees :: ", angle_shoulder);
-			//	if(angle_shoulder > 0) {
-			//		angle[SERVO_SHOULDER] = angle_shoulder;
-			//	}
-			//}
-			////else printf("Cannot grab right shoulder angle\n");
+			//right shoulder angle
+			Vector4 spineVector, armVector;
+			vecsub(j1,j2,spineVector); vecsub(j9,j8,armVector);
+			hr = twoVectorAngle(spineVector,armVector,SERVO_SHOULDER,angle_shoulder);
+			if (hr == S_OK){
+				if (!(count%50)) printf("SHOULDER - %d degrees :: ", angle_shoulder);
+				if(angle_shoulder > 0) {
+					angle[SERVO_SHOULDER] = angle_shoulder;
+				}
+			}
+			//else printf("Cannot grab right shoulder angle\n");
 
-			////right elbow angle
-			//hr = threeJointAngle(j8,j9,j10,SERVO_ELBOW,angle_elbow);
-			//if (hr == S_OK){
-			//	if (!(count%50)) printf("ELBOW - %d degrees :: \n", angle_elbow);
-			//	
-			//	if(angle_elbow > 0) {
-			//		angle[SERVO_ELBOW] = angle_elbow;
-			//	}
-			//}
-			////else printf("Cannot grab right elbow angle\n");
+			//right elbow angle
+			hr = threeJointAngle(j8,j9,j10,SERVO_ELBOW,angle_elbow);
+			if (hr == S_OK){
+				if (!(count%50)) printf("ELBOW - %d degrees :: \n", angle_elbow);
+				
+				if(angle_elbow > 0) {
+					angle[SERVO_ELBOW] = angle_elbow;
+				}
+			}
+			//else printf("Cannot grab right elbow angle\n");
 			
-			////right wrist angle
-			//hr = threeJointAngle(j9,j10,j11,SERVO_WRIST,angle_wrist);
-			//if (hr == S_OK){
-			//	if (!(count%50)) printf("WRIST - %d degrees :: ", angle_wrist);
-			//	if(angle_wrist > 0) {
-			//		angle[SERVO_WRIST] = angle_wrist;
-			//	}
-			//}
-			////else printf("Cannot grab right wrist angle\n\n");
+			//right wrist angle
+			hr = threeJointAngle(j9,j10,j11,SERVO_WRIST,angle_wrist);
+			if (hr == S_OK){
+				if (!(count%50)) printf("WRIST - %d degrees :: ", angle_wrist);
+				if(angle_wrist > 0) {
+					angle[SERVO_WRIST] = angle_wrist;
+				}
+			}
+			//else printf("Cannot grab right wrist angle\n\n");
 
 			//open and close claw
 			if (abs(neck_depth-right_hand_depth) > depth_diff){
