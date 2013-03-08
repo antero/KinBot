@@ -31,7 +31,7 @@ void send2Ard(int motorIndex, int angle){
 	  switch (motorIndex){
 		case 1:
 			//pino 02
-			 printf("Motor 1 (base) escolhido\nposicao atual: %d\n", angle);
+			 //printf("Motor 1 (base) escolhido\nposicao atual: %d\n", angle);
 			 sprintf(command, "A %d", angle);
 			 ardPort.Write(command, 5);
 			 break;
@@ -55,7 +55,7 @@ void send2Ard(int motorIndex, int angle){
 			 break;
 		case 5:
 			//pino 13
-			 printf("Motor 5 (garra) escolhido\nposicao atual: %d\n", angle);
+			// printf("Motor 5 (garra) escolhido\nposicao atual: %d\n", angle);
 			 sprintf(command, "E %d", angle);
 			 ardPort.Write(command, 5);
 			 break;
